@@ -1,8 +1,4 @@
-[Source](https://paper.dropbox.com/doc/Max-Script-Requirements--Acuv9j22AS_ZyhoK4AspPWfpAg-eSFsrGSWh1tSQYqVgXkRp "Permalink to Dropbox Paper")
-
-# Dropbox Paper
-
-​​Max Script Requirements
+# Max Script Requirements
 
 ## ​​Short Pitch:
 
@@ -42,7 +38,7 @@
 
 ## ​​Proposed user interface:
 
-​​ ![User-uploaded image: 1.png][1]
+![Positioning Example](screenshots/1.png)
 
 ​​The user selects a file that contains the 2d array positions
 
