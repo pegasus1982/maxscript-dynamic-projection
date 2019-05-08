@@ -42,7 +42,7 @@
 
 ​​The user selects a file that contains the 2d array positions
 
-​​ ![User-uploaded image: 0.jpg][2]
+![Positioning Example](screenshots/2.jpeg)
 
 ​​The user clicks a button on the script to activate the desired array to be placed. (left or right)
 
