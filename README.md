@@ -46,39 +46,39 @@
 
 ​​The user clicks a button on the script to activate the desired array to be placed. (left or right)
 
-​​ ![User-uploaded image: 2.png][3]
+![Positioning Example](screenshots/3.png)
 
 ​​The user clicks on the target object. A single click selects the object and sets the center point in the click location.
 
-​​ ![User-uploaded image: 3.png][4]
+![Positioning Example](screenshots/4.png)
 
 ​​A null object appears over the surface, alongside with a circle representing the radius parameter and a handle that controls the orientation. An array of nulls are also placed over the surface at the correct projected positions.
 
 ​​The user can grab the center null tu adjust the position, and the points move in real time.
 
-​​ ![User-uploaded image: 4.png][5]
+![Positioning Example](screenshots/5.png)
 
 ​​The user can grab the handle to rotate the array, and the nulls move in real time.
 
-​​ ![User-uploaded image: 5.png][6]
+![Positioning Example](screenshots/6.png)
 
 ​​After the user is done adjusting, they can select the other array and repeat the process.
 
-​​ ![User-uploaded image: 6.png][7]
+![Positioning Example](screenshots/7.png)
 
-​​ ![User-uploaded image: 7.png][8]
+![Positioning Example](screenshots/8.png)
 
-​​ ![User-uploaded image: 8.png][9]
+![Positioning Example](screenshots/9.png)
 
-​​ ![User-uploaded image: 9.png][10]
+![Positioning Example](screenshots/10.png)
 
 ​​The script features a radius parameter that affects both arrays simultaniously.
 
-​​ ![User-uploaded image: 10.png][11]
+![Positioning Example](screenshots/11.png)
 
 ​​After both arrays are placed, the user can click on the export button to export a list of 3d position.
 
-​​ ![User-uploaded image: 11.png][12]
+![Positioning Example](screenshots/12.png)
 
 ​​The output should be a CSV file saved in the same folder as the source array. The name of the file should be the name of the object. 
 
