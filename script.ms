@@ -23,21 +23,29 @@ rollout DynamicProjection "Dynamic Projection"
         (
             skiptonextline AssyFile
             while not eof AssyFile do(
-                index = readvalue AssyFile
-                leftX = readValue AssyFile
-                leftY = readValue AssyFile
-                rightX = readValue AssyFile
-                rightY = readValue AssyFile
-                -- print leftX leftY rightX rightY
-                newLeftArray = #(leftX, leftY)
-                newRightArray = #(rightX, rightY)
-                append originLeftPointArray newLeftArray
-                append originRightPointArray newRightArray
+                str = readline AssyFile
+                if str == ",,,,,,,,,,,," or str == "" do(continue)
+                newStr = filterstring str "," splitEmptyToken:false
+                
+                rightID = newStr[1] as Integer
+                rightX  = newStr[2] as float
+                rightY  = newStr[3] as float--format "right -> id : % , x : % , y : %\n" rightID rightX rightY
+
+                leftID  = newStr[7] as Integer
+                leftX   = newStr[8] as float
+                leftY   = newStr[9] as float
+                --format "left ->  id : % , x : % , y : %\n" leftID leftX leftY
+
+                newLeftArrayItem = #(leftID, leftX, leftY)
+                newRightArrayItem = #(rightID, rightX, rightY)
+                
+                append originLeftPointArray newLeftArrayItem
+                append originRightPointArray newRightArrayItem
             )
-            print "left point array"
-            print originLeftPointArray
-            print "right point array"
-            print originRightPointArray
+            --print "left point array"
+            --print originLeftPointArray
+            --print "right point array"
+            --print originRightPointArray
         )
         else( messageBox "Open Failed" title:"Error!" )
     )
@@ -54,16 +62,17 @@ rollout DynamicProjection "Dynamic Projection"
     -- drawing points
     fn createSpheresFromArray arr p p_name p_color = (
         if(arr.count > 0) do(
-            minX = arr[1][1]
-            minY = arr[1][2]
-            maxX = arr[1][1]
-            maxY = arr[1][2]
+            ID   = arr[1][1]
+            minX = arr[1][2]
+            minY = arr[1][3]
+            maxX = arr[1][2]
+            maxY = arr[1][3]
             for i = 2 to arr.count do(
                 format "x : %, y : %\n" arr[i][1] arr[i][2]
-                if(minX > arr[i][1]) do(minX = arr[i][1])
-                if(minY > arr[i][2]) do(minY = arr[i][2])
-                if(maxX < arr[i][1]) do(maxX = arr[i][1])
-                if(maxY < arr[i][2]) do(maxY = arr[i][2])
+                if(minX > arr[i][1]) do(minX = arr[i][2])
+                if(minY > arr[i][2]) do(minY = arr[i][3])
+                if(maxX < arr[i][1]) do(maxX = arr[i][2])
+                if(maxY < arr[i][2]) do(maxY = arr[i][3])
             )
             bounce = spin_Radius.value
             t = 0
@@ -85,8 +94,8 @@ rollout DynamicProjection "Dynamic Projection"
                 sph.name = p_name
                 sph.wirecolor = p_color
                 sph.radius = 1
-                sph.position.x = p[1]-(centerX-arr[i][1])*t
-                sph.position.y = p[2]-(centerY-arr[i][2])*t
+                sph.position.x = p[1]-(centerX-arr[i][2])*t
+                sph.position.y = p[2]-(centerY-arr[i][3])*t
                 sph.position.z = p[3]
                 
                 -- find intersection
