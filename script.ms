@@ -13,6 +13,7 @@ rollout DynamicProjection "Dynamic Projection"
     local originRightPointArray = #()
     local color_pink = (color 255 23 215)
     local color_cyan = (color 23 255 215)
+    local targetMesh
 
     -- read data from csv
     fn readFile path = (
@@ -42,7 +43,58 @@ rollout DynamicProjection "Dynamic Projection"
     )
     -- end read data from csv
     
+    -- find intersection
+    fn find_intersection node_to_z =(
+        local testRay = ray node_to_z.pos [0,0,-1]
+        local nodeMaxZ = targetMesh.max.z
+        testRay.pos.z = nodeMaxZ + 0.0001 * abs nodeMaxZ
+        intersectRay targetMesh testRay
+    )
+    -- end find intersection
     -- drawing points
+    fn createSpheresFromArray arr p p_name p_color = (
+        if(arr.count > 0) do(
+            minX = arr[1][1]
+            minY = arr[1][2]
+            maxX = arr[1][1]
+            maxY = arr[1][2]
+            for i = 2 to arr.count do(
+                format "x : %, y : %\n" arr[i][1] arr[i][2]
+                if(minX > arr[i][1]) do(minX = arr[i][1])
+                if(minY > arr[i][2]) do(minY = arr[i][2])
+                if(maxX < arr[i][1]) do(maxX = arr[i][1])
+                if(maxY < arr[i][2]) do(maxY = arr[i][2])
+            )
+            bounce = spin_Radius.value
+            t = 0
+            format "min x : %, max x : %\n" minX maxX
+            format "min y : %, max y : %\n" minY maxY
+            centerX = (maxX + minX) / 2
+            centerY = (maxY + minY) / 2
+            print (maxX-minX)
+            print (maxY-minY)
+            if((maxX-minX) > (maxY-minY)) then(
+                t = bounce / float(maxX-minX)
+            )
+            else(
+                t = bounce / float(maxY-minY)
+            )
+            format "bounce : %, t : %\n" bounce t
+            for i = 1 to arr.count do(
+                sph = sphere()
+                sph.name = p_name
+                sph.wirecolor = p_color
+                sph.radius = 1
+                sph.position.x = p[1]-(centerX-arr[i][1])*t
+                sph.position.y = p[2]-(centerY-arr[i][2])*t
+                sph.position.z = p[3]
+                
+                -- find intersection
+                int_point = find_intersection sph
+                if int_point != undefined then sph.pos = int_point.pos
+            )
+        )
+    )
     fn drawPoints p btn = (
         btn_Left.checked = false
         btn_Right.checked = false
@@ -51,46 +103,12 @@ rollout DynamicProjection "Dynamic Projection"
             if(btn == "left") then(
                 delete $*left_point*
                 arr = originLeftPointArray
-                if(arr.count > 0) do(
-                    minX = arr[1][1]
-                    minY = arr[1][2]
-                    maxX = arr[1][1]
-                    maxY = arr[1][2]
-                    for i = 2 to arr.count do(
-                        format "x : %, y : %\n" arr[i][1] arr[i][2]
-                        if(minX > arr[i][1]) do(minX = arr[i][1])
-                        if(minY > arr[i][2]) do(minY = arr[i][2])
-                        if(maxX < arr[i][1]) do(maxX = arr[i][1])
-                        if(maxY < arr[i][2]) do(maxY = arr[i][2])
-                    )
-                    bounce = spin_Radius.value
-                    t = 0
-                    format "min x : %, max x : %\n" minX maxX
-                    format "min y : %, max y : %\n" minY maxY
-                    centerX = (maxX + minX) / 2
-                    centerY = (maxY + minY) / 2
-                    print (maxX-minX)
-                    print (maxY-minY)
-                    if((maxX-minX) > (maxY-minY)) then(
-                        t = bounce / float(maxX-minX)
-                    )
-                    else(
-                        t = bounce / float(maxY-minY)
-                    )
-                    format "bounce : %, t : %\n" bounce t
-                    for i = 1 to arr.count do(
-                        sph = sphere()
-                        sph.name = "left_point"
-                        sph.wirecolor = color_pink
-                        sph.radius = 1
-                        sph.position.x = p[1]-(centerX-arr[i][1])*t
-                        sph.position.y = p[2]-(centerY-arr[i][2])*t
-                        sph.position.z = p[3]
-                    )
-                )
+                createSpheresFromArray arr p "left_point" color_pink
             )
             else(
-                print "right array"
+                delete $*right_point*
+                arr = originLeftPointArray
+                createSpheresFromArray arr p "right_point" color_cyan
             )
         )
     )
@@ -117,6 +135,7 @@ rollout DynamicProjection "Dynamic Projection"
         btn_Right.checked = false
         if state == true do(
             p = pickobject prompt:"Pick surface to move to."
+            targetMesh = p
             try(
                 mouseray = mapScreenToWorldRay mouse.pos
                 sectray = intersectRayEx $ mouseray
@@ -126,7 +145,7 @@ rollout DynamicProjection "Dynamic Projection"
             )catch(
                 print "default"
                 Intersectpos = gw.mapCPToWorld (gw.getPointOnCP mouse.pos)
-                drawPoints Intersectpos "left"
+                --drawPoints Intersectpos "left"
             )
         )
     )
@@ -135,6 +154,21 @@ rollout DynamicProjection "Dynamic Projection"
     -- right button event
     on btn_Right changed state do(
         btn_Left.checked = false
+        if state == true do(
+            p = pickobject prompt:"Pick surface to move to."
+            targetMesh = p
+            try(
+                mouseray = mapScreenToWorldRay mouse.pos
+                sectray = intersectRayEx $ mouseray
+                Intersectpos = sectray[1].pos
+                print "get"
+                drawPoints Intersectpos "right"
+            )catch(
+                print "default"
+                Intersectpos = gw.mapCPToWorld (gw.getPointOnCP mouse.pos)
+                --drawPoints Intersectpos "left"
+            )
+        )
     )
     -- end right button event
 
