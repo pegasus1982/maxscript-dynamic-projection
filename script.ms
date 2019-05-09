@@ -3,7 +3,7 @@ rollout DynamicProjection "Dynamic Projection"
     -- rollout ui
 	editText edit_FilePath   "File Name" pos:[20,  15] width:250
 	button   btn_Browse      "Browse..." pos:[287, 13]
-    spinner  spin_Radius     "Radius"    pos:[43,  45] width:70  type:#integer range:[20,600,20] 
+    spinner  spin_Radius     "Radius"    pos:[43,  45] width:70  type:#integer range:[20,600,100] 
     checkButton   btn_Left        "Left"      pos:[220, 42] width:60
 	checkButton   btn_Right       "Right"     pos:[290, 42] width:60
 	button   btn_Export      "Export"    pos:[370, 13] width:110 height:50
@@ -11,6 +11,8 @@ rollout DynamicProjection "Dynamic Projection"
 
     local originLeftPointArray = #()
     local originRightPointArray = #()
+    local color_pink = (color 255 23 215)
+    local color_cyan = (color 23 255 215)
 
     -- read data from csv
     fn readFile path = (
@@ -41,8 +43,56 @@ rollout DynamicProjection "Dynamic Projection"
     -- end read data from csv
     
     -- drawing points
-    fn drawPoints btn = (
-        print btn
+    fn drawPoints p btn = (
+        btn_Left.checked = false
+        btn_Right.checked = false
+
+        if(classOf p == Point3) do(
+            if(btn == "left") then(
+                delete $*left_point*
+                arr = originLeftPointArray
+                if(arr.count > 0) do(
+                    minX = arr[1][1]
+                    minY = arr[1][2]
+                    maxX = arr[1][1]
+                    maxY = arr[1][2]
+                    for i = 2 to arr.count do(
+                        format "x : %, y : %\n" arr[i][1] arr[i][2]
+                        if(minX > arr[i][1]) do(minX = arr[i][1])
+                        if(minY > arr[i][2]) do(minY = arr[i][2])
+                        if(maxX < arr[i][1]) do(maxX = arr[i][1])
+                        if(maxY < arr[i][2]) do(maxY = arr[i][2])
+                    )
+                    bounce = spin_Radius.value
+                    t = 0
+                    format "min x : %, max x : %\n" minX maxX
+                    format "min y : %, max y : %\n" minY maxY
+                    centerX = (maxX + minX) / 2
+                    centerY = (maxY + minY) / 2
+                    print (maxX-minX)
+                    print (maxY-minY)
+                    if((maxX-minX) > (maxY-minY)) then(
+                        t = bounce / float(maxX-minX)
+                    )
+                    else(
+                        t = bounce / float(maxY-minY)
+                    )
+                    format "bounce : %, t : %\n" bounce t
+                    for i = 1 to arr.count do(
+                        sph = sphere()
+                        sph.name = "left_point"
+                        sph.wirecolor = color_pink
+                        sph.radius = 1
+                        sph.position.x = p[1]-(centerX-arr[i][1])*t
+                        sph.position.y = p[2]-(centerY-arr[i][2])*t
+                        sph.position.z = p[3]
+                    )
+                )
+            )
+            else(
+                print "right array"
+            )
+        )
     )
     -- end drawing points
 
@@ -66,11 +116,17 @@ rollout DynamicProjection "Dynamic Projection"
     on btn_Left changed state do(
         btn_Right.checked = false
         if state == true do(
-            pp = pickPoint snap:#3D
-            print pp
-            if (classOf pp == Point3) do(
-                btn_Left.checked = false
-                drawPoints 1 -- left
+            p = pickobject prompt:"Pick surface to move to."
+            try(
+                mouseray = mapScreenToWorldRay mouse.pos
+                sectray = intersectRayEx $ mouseray
+                Intersectpos = sectray[1].pos
+                print "get"
+                drawPoints Intersectpos "left"
+            )catch(
+                print "default"
+                Intersectpos = gw.mapCPToWorld (gw.getPointOnCP mouse.pos)
+                drawPoints Intersectpos "left"
             )
         )
     )
@@ -79,14 +135,6 @@ rollout DynamicProjection "Dynamic Projection"
     -- right button event
     on btn_Right changed state do(
         btn_Left.checked = false
-        if state == true do(
-            pp = pickPoint snap:#3D
-            print pp
-            if (classOf pp == Point3) do(
-                btn_Right.checked = false
-                drawPoints 2 -- right
-            )
-        )
     )
     -- end right button event
 
