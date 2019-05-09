@@ -25,15 +25,15 @@ rollout DynamicProjection "Dynamic Projection"
             while not eof AssyFile do(
                 str = readline AssyFile
                 if str == ",,,,,,,,,,,," or str == "" do(continue)
-                newStr = filterstring str "," splitEmptyToken:false
+                newStr = filterstring str "," splitEmptyTokens:true
                 
                 rightID = newStr[1] as Integer
                 rightX  = newStr[2] as float
                 rightY  = newStr[3] as float--format "right -> id : % , x : % , y : %\n" rightID rightX rightY
 
-                leftID  = newStr[7] as Integer
-                leftX   = newStr[8] as float
-                leftY   = newStr[9] as float
+                leftID  = newStr[8] as Integer
+                leftX   = newStr[9] as float
+                leftY   = newStr[10] as float
                 --format "left ->  id : % , x : % , y : %\n" leftID leftX leftY
 
                 newLeftArrayItem = #(leftID, leftX, leftY)
