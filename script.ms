@@ -13,7 +13,16 @@ rollout DynamicProjection "Dynamic Projection"
     local originRightPointArray = #()
     local color_pink = (color 255 23 215)
     local color_cyan = (color 23 255 215)
-    local targetMesh
+
+    global leftCollectionController
+    global rightCollectionController
+
+    --global mat_pink_opacity = StandardMaterial()
+    --mat_pink_opacity.name = ("mat_pink_opacity")
+
+    global object_to_align
+    global surface_obj
+    global original_TM
 
     -- read data from csv
     fn readFile path = (
@@ -51,82 +60,94 @@ rollout DynamicProjection "Dynamic Projection"
     )
     -- end read data from csv
     
-    -- find intersection
-    fn find_intersection node_to_z =(
-        local testRay = ray node_to_z.pos [0,0,-1]
-        local nodeMaxZ = targetMesh.max.z
-        testRay.pos.z = nodeMaxZ + 0.0001 * abs nodeMaxZ
-        intersectRay targetMesh testRay
+    -- create points collection
+    fn createController type = (
+        local clr
+        if type == "left" then(clr = color_pink) else(clr = color_cyan)
+        object_to_align.material = StandardMaterial diffuse:clr opacity:30 name:("mat_controller_opacity")
+
+        center = box()
+        center.length = 3
+        center.width = 3
+        center.height = 3
+        center.name = (type+"_collection_controller_center")
+        center.pos = object_to_align.pos
+        center.dir = object_to_align.dir
+        center.wirecolor = clr
+
+        diameter = Cylinder()
+        diameter.radius = 0.75
+        diameter.height = object_to_align.radius
+        diameter.name = (type+"_collection_controller_diameter")
+        diameter.pos = object_to_align.pos
+        diameter.pivot = object_to_align.pos
+        diameter.dir = object_to_align.dir
+        diameter.transform = (rotateYmatrix 90) * diameter.transform
+        diameter.wirecolor = clr
+        
+        rotate_handle = sphere()
+        rotate_handle.radius = 1.6
+        rotate_handle.name = (type+"_collection_controller_rotate_handle")
+        rotate_handle.pos = object_to_align.pos
+        rotate_handle.pivot = object_to_align.pos
+        rotate_handle.dir = object_to_align.dir
+        in coordsys #local rotate_handle.pos.x += object_to_align.radius
+        rotate_handle.wirecolor = clr
+
+        object_to_align.parent = center
+        diameter.parent = center
+        rotate_handle.parent = center
+        in coordsys #local center.pos.z += 3
+
+        return center
     )
-    -- end find intersection
-    -- drawing points
-    fn createSpheresFromArray arr p p_name p_color = (
-        if(arr.count > 0) do(
-            ID   = arr[1][1]
-            minX = arr[1][2]
-            minY = arr[1][3]
-            maxX = arr[1][2]
-            maxY = arr[1][3]
-            for i = 2 to arr.count do(
-                format "x : %, y : %\n" arr[i][1] arr[i][2]
-                if(minX > arr[i][1]) do(minX = arr[i][2])
-                if(minY > arr[i][2]) do(minY = arr[i][3])
-                if(maxX < arr[i][1]) do(maxX = arr[i][2])
-                if(maxY < arr[i][2]) do(maxY = arr[i][3])
-            )
-            bounce = spin_Radius.value
-            t = 0
-            format "min x : %, max x : %\n" minX maxX
-            format "min y : %, max y : %\n" minY maxY
-            centerX = (maxX + minX) / 2
-            centerY = (maxY + minY) / 2
-            print (maxX-minX)
-            print (maxY-minY)
-            if((maxX-minX) > (maxY-minY)) then(
-                t = bounce / float(maxX-minX)
-            )
-            else(
-                t = bounce / float(maxY-minY)
-            )
-            format "bounce : %, t : %\n" bounce t
-            for i = 1 to arr.count do(
-                sph = sphere()
-                sph.name = p_name
-                sph.wirecolor = p_color
-                sph.radius = 1
-                sph.position.x = p[1]-(centerX-arr[i][2])*t
-                sph.position.y = p[2]-(centerY-arr[i][3])*t
-                sph.position.z = p[3]
-                
-                -- find intersection
-                int_point = find_intersection sph
-                if int_point != undefined then sph.pos = int_point.pos
-            )
+    fn createCollection = (
+        print "create controller"
+        if btn_Left.checked == true then (
+            print "for left"
+            btn_Left.checked = false
+
+            leftCollectionController = createController "left"
+            --print a
+        )
+        else(
+            print "for right"
+            btn_Right.checked = false
+
+            rightCollectionController = createController "right"
         )
     )
-    fn drawPoints p btn = (
-        btn_Left.checked = false
-        btn_Right.checked = false
+    -- end create point collection
 
-        if(classOf p == Point3) do(
-            if(btn == "left") then(
-                delete $*left_point*
-                arr = originLeftPointArray
-                createSpheresFromArray arr p "left_point" color_pink
+    -- assign controller to surface
+    fn assign_normal msg ir obj faceNum shift ctrl alt = (
+        if msg == #freeMove then (
+            if ir != undefined then (
+                object_to_align.pos = ir.pos 
+                object_to_align.dir = ir.dir
+                return #continue
             )
             else(
-                delete $*right_point*
-                arr = originLeftPointArray
-                createSpheresFromArray arr p "right_point" color_cyan
+                return #continue
             )
         )
+        if msg == #mouseAbort then (
+            delete $*left_collection_controller*
+            return #end
+        )
+        if msg != #mousePoint then (
+            return #continue
+        )
+        else (
+            format "Align Object To Face Finished.\n" 
+            createCollection()
+            return #end
+        )
     )
-    -- end drawing points
-
+    -- and assign controller to surface
     -- event listeners
     -- open file dialog
-    on btn_Browse pressed do
-    (
+    on btn_Browse pressed do (
         dlg = dotNetObject "System.Windows.Forms.OpenFileDialog"
         dlg.title = "Please select a CSV file to get point data"
         dlg.Multiselect = false
@@ -140,22 +161,18 @@ rollout DynamicProjection "Dynamic Projection"
     -- end open file dialog
 
     -- left button event
-    on btn_Left changed state do(
+    on btn_Left changed state do (
         btn_Right.checked = false
         if state == true do(
-            p = pickobject prompt:"Pick surface to move to."
-            targetMesh = p
-            try(
-                mouseray = mapScreenToWorldRay mouse.pos
-                sectray = intersectRayEx $ mouseray
-                Intersectpos = sectray[1].pos
-                print "get"
-                drawPoints Intersectpos "left"
-            )catch(
-                print "default"
-                Intersectpos = gw.mapCPToWorld (gw.getPointOnCP mouse.pos)
-                --drawPoints Intersectpos "left"
-            )
+            delete $*left_collection_controller*
+            object_to_align = Cylinder()
+            object_to_align.radius = 30
+            object_to_align.height = 0.5
+            object_to_align.name = "left_collection_controller"
+
+            surface_obj = pickobject prompt:"Pick surface to move to."
+            original_TM = object_to_align.transform
+            a = mouseTrack on:surface_obj trackCallback:assign_normal
         )
     )
     -- end left button event
@@ -164,19 +181,15 @@ rollout DynamicProjection "Dynamic Projection"
     on btn_Right changed state do(
         btn_Left.checked = false
         if state == true do(
-            p = pickobject prompt:"Pick surface to move to."
-            targetMesh = p
-            try(
-                mouseray = mapScreenToWorldRay mouse.pos
-                sectray = intersectRayEx $ mouseray
-                Intersectpos = sectray[1].pos
-                print "get"
-                drawPoints Intersectpos "right"
-            )catch(
-                print "default"
-                Intersectpos = gw.mapCPToWorld (gw.getPointOnCP mouse.pos)
-                --drawPoints Intersectpos "left"
-            )
+            delete $*right_collection_controller*
+            object_to_align = Cylinder()
+            object_to_align.radius = 30
+            object_to_align.height = 0.5
+            object_to_align.name = "right_collection_controller"
+
+            surface_obj = pickobject prompt:"Pick surface to move to."
+            original_TM = object_to_align.transform
+            a = mouseTrack on:surface_obj trackCallback:assign_normal
         )
     )
     -- end right button event
