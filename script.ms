@@ -118,8 +118,8 @@ rollout DynamicProjection "Dynamic Projection"
         if type == "left" then(clr = color_pink) else(clr = color_cyan)
         object_to_align.material = StandardMaterial diffuse:clr opacity:30 name:("mat_controller_opacity")
         when select object_to_align changes do(
- 			deselect $*_collection_controller_panel*
- 		)
+            deselect $*_collection_controller_panel*
+        )
 
         center = box()
         center.length = 6
@@ -139,8 +139,8 @@ rollout DynamicProjection "Dynamic Projection"
         axis.name = (type+"_collection_controller_axis")
         axis.wirecolor = clr
         when select axis changes do(
- 			deselect $*_collection_controller_axis*
- 		)
+            deselect $*_collection_controller_axis*
+        )
         
         axisCone = cone()
         axisCone.radius1 = 1.3
@@ -153,8 +153,8 @@ rollout DynamicProjection "Dynamic Projection"
         axisCone.wirecolor = clr
         in coordsys #local axisCone.pos.z += 30
         when select axisCone changes do(
- 			deselect $*_collection_controller_axis_cone*
- 		)
+            deselect $*_collection_controller_axis_cone*
+        )
 
         diameter = Cylinder()
         diameter.radius = 0.3
@@ -166,8 +166,8 @@ rollout DynamicProjection "Dynamic Projection"
         diameter.transform = (rotateYmatrix 90) * diameter.transform
         diameter.wirecolor = clr
         when select diameter changes do(
- 			deselect $*_collection_controller_diameter*
- 		)
+            deselect $*_collection_controller_diameter*
+        )
         
         rotate_handle = sphere()
         rotate_handle.radius = 1.6
@@ -178,8 +178,8 @@ rollout DynamicProjection "Dynamic Projection"
         rotate_handle.pivot = object_to_align.pos
         rotate_handle.wirecolor = clr
         when select rotate_handle changes do(
- 			deselect $*_collection_controller_rotate_handle*
- 		)
+            deselect $*_collection_controller_rotate_handle*
+        )
 
         object_to_align.parent = center
         diameter.parent = rotate_handle
