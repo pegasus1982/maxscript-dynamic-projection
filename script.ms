@@ -441,7 +441,13 @@ rollout DynamicProjection "Dynamic Projection"
 
         -- open file
         folder = getFilenamePath edit_FilePath.text
-        outputFilePath = (folder+"output.csv")
+        local outputFilePath
+        if(isValidNode surface_obj) then(
+            outputFilePath = (folder+surface_obj.name+".csv")
+        )
+        else(
+            outputFilePath = (folder+"output.csv")
+        )
         try(
             out_file = createFile outputFilePath
             format "RightID, Right x, Right y, Right z, LeftID, Left x, Left y, Left z\n" to:out_file
