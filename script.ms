@@ -90,22 +90,24 @@ rollout DynamicProjection "Dynamic Projection"
             for i = 1 to arr.count do(
                 index = arr[i][1] as string
                 tmp_name = type+"_point_"+index
-                
-                sph = getNodeByName tmp_name
-                if sph == undefined then(
-                    sph = sphere()
-                    sph.name = tmp_name
-                    sph.wirecolor = p_color
-                    sph.radius = 1
+                try(
+                    sph = getNodeByName tmp_name
+                    if sph == undefined then(
+                        sph = sphere()
+                        sph.name = tmp_name
+                        sph.wirecolor = p_color
+                        sph.radius = 1
+                    )
+                    
+                    sph.pos = parent.pos
+                    sph.dir = parent.dir
+                    in coordsys #local sph.pos.x += (centerX-arr[i][2])*t
+                    in coordsys #local sph.pos.y += (centerY-arr[i][3])*t
+                    in coordsys #local sph.pos.z += 200
+                    
+                    append res sph
                 )
-                
-                sph.pos = parent.pos
-                sph.dir = parent.dir
-                in coordsys #local sph.pos.x += (centerX-arr[i][2])*t
-                in coordsys #local sph.pos.y += (centerY-arr[i][3])*t
-                in coordsys #local sph.pos.z += 200
-                
-                append res sph
+                catch()
             )
             return res
         )
@@ -195,7 +197,7 @@ rollout DynamicProjection "Dynamic Projection"
     )
 
     fn updateProjectionPoints points clr = (
-        if point != undefined do(
+        if points != undefined do(
             res = #()
             for i = 1 to points.count do(
                 p = points[i]
@@ -221,26 +223,30 @@ rollout DynamicProjection "Dynamic Projection"
     -- redraw points
     fn updatePoints = (
         -- for left point collection
-        newPoints = drawPoints leftCollectionController "left"
-        for i = 1 to newPoints.count do(
-            newPoints[i].parent = leftCollectionController
-        )
+        if (isValidNode leftCollectionController)  do(
+            newPoints = drawPoints leftCollectionController "left"
+            for i = 1 to newPoints.count do(
+                newPoints[i].parent = leftCollectionController
+            )
 
-        projections = updateProjectionPoints newPoints color_pink
-        for i = 1 to projections.count do(
-            projections[i].parent = leftCollectionController
+            projections = updateProjectionPoints newPoints color_pink
+            for i = 1 to projections.count do(
+                projections[i].parent = leftCollectionController
+            )
         )
         -- end for left point collection
 
         -- for right point collection
-        newPoints = drawPoints rightCollectionController "right"
-        for i = 1 to newPoints.count do(
-            newPoints[i].parent = rightCollectionController
-        )
+        if (isValidNode rightCollectionController) do(
+            newPoints = drawPoints rightCollectionController "right"
+            for i = 1 to newPoints.count do(
+                newPoints[i].parent = rightCollectionController
+            )
 
-        projections = updateProjectionPoints newPoints color_cyan
-        for i = 1 to projections.count do(
-            projections[i].parent = rightCollectionController
+            projections = updateProjectionPoints newPoints color_cyan
+            for i = 1 to projections.count do(
+                projections[i].parent = rightCollectionController
+            )
         )
         -- end for right point collection
     )
@@ -393,7 +399,8 @@ rollout DynamicProjection "Dynamic Projection"
     -- end spinner event
     -- export button event
     on btn_Export pressed do(
-
+        local leftPoints = $*left_point_*_projection* as array
+        print leftPoints
     )
     -- end export button event
     -- end event listeners
