@@ -399,8 +399,72 @@ rollout DynamicProjection "Dynamic Projection"
     -- end spinner event
     -- export button event
     on btn_Export pressed do(
+        -- get left position projected to surface
         local leftPoints = $*left_point_*_projection* as array
-        print leftPoints
+        local leftPositionProjected = #()
+        for i = 1 to leftPoints.count do(
+            a = leftPoints[i]
+            if(isValidNode a) do(
+                str = a.name
+                newStr = filterstring str "_" splitEmptyTokens:true
+                id = newStr[3]
+                x = a.pos.x
+                y = a.pos.y
+                z = a.pos.z
+                local info = #(id,x,y,z)
+                append leftPositionProjected info
+            )
+        )
+        -- end get left position projected to surface
+
+        -- get right position projected to surface
+        local rightPoints = $*right_point_*_projection* as array
+        local rightPositionProjected = #()
+        for i = 1 to rightPoints.count do(
+            a = rightPoints[i]
+            if(isValidNode a) do(
+                str = a.name
+                newStr = filterstring str "_" splitEmptyTokens:true
+                id = newStr[3]
+                x = a.pos.x
+                y = a.pos.y
+                z = a.pos.z
+                local info = #(id,x,y,z)
+                append rightPositionProjected info
+            )
+        )
+        -- end get right position projected to surface
+        print "left"
+        print leftPositionProjected
+        print "right"
+        print rightPositionProjected
+
+        -- open file
+        folder = getFilenamePath edit_FilePath.text
+        outputFilePath = (folder+"output.csv")
+        try(
+            out_file = createFile outputFilePath
+            format "RightID, Right x, Right y, Right z, LeftID, Left x, Left y, Left z\n" to:out_file
+            -- end open file
+            cnt = 0
+            if(leftPositionProjected.count > rightPositionProjected.count) then(cnt=leftPositionProjected.count) else(cnt=rightPositionProjected.count)
+            for i = 1 to cnt do(
+                if i <= rightPositionProjected.count then(
+                    format "%, %, %, %, " rightPositionProjected[i][1] rightPositionProjected[i][2] rightPositionProjected[i][3] rightPositionProjected[i][4] to:out_file
+                )
+                else(format ", , , , " to:out_file)
+                if i <= leftPositionProjected.count then(
+                    format "%, %, %, %\n" leftPositionProjected[i][1] leftPositionProjected[i][2] leftPositionProjected[i][3] leftPositionProjected[i][4] to:out_file
+                )
+                else(format ", , ,\n" to:out_file)
+            )
+            -- write coord data
+            close out_file
+            messageBox "Exporting Result Successed" title:"Info!"
+        )
+        catch(
+            messageBox "Can't Create Output File" title:"Error!"
+        )
     )
     -- end export button event
     -- end event listeners
