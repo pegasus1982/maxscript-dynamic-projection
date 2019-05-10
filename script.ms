@@ -17,16 +17,12 @@ rollout DynamicProjection "Dynamic Projection"
     global leftCollectionController
     global rightCollectionController
 
-    --global mat_pink_opacity = StandardMaterial()
-    --mat_pink_opacity.name = ("mat_pink_opacity")
-
     global object_to_align
     global surface_obj
     global original_TM
 
     -- read data from csv
     fn readFile path = (
-        --print "read csv file"
         AssyFile = openfile path
         if (AssyFile != undefined) then
         (
@@ -83,7 +79,6 @@ rollout DynamicProjection "Dynamic Projection"
             )
             bounce = spin_Radius.value
             t = 0
-            format "minX : %, maxX : %, minY : %, maxY : %\n" minX maxX minY maxY
             centerX = (maxX + minX) / 2
             centerY = (maxY + minY) / 2
             if((maxX-minX) > (maxY-minY)) then(
@@ -92,7 +87,6 @@ rollout DynamicProjection "Dynamic Projection"
             else(
                 t = bounce / float(maxY-minY)
             )
-            format "bounce : %, t : %\n" bounce t
             for i = 1 to arr.count do(
                 index = arr[i][1] as string
                 tmp_name = type+"_point_"+index
@@ -121,14 +115,18 @@ rollout DynamicProjection "Dynamic Projection"
         local clr
         if type == "left" then(clr = color_pink) else(clr = color_cyan)
         object_to_align.material = StandardMaterial diffuse:clr opacity:30 name:("mat_controller_opacity")
+        when select object_to_align changes do(
+ 			deselect $*_collection_controller_panel*
+ 		)
 
         center = box()
-        center.length = 3
-        center.width = 3
-        center.height = 3
+        center.length = 6
+        center.width = 6
+        center.height = 6
         center.name = (type+"_collection_controller_center")
         center.pos = object_to_align.pos
         center.dir = object_to_align.dir
+        in coordsys #local center.pos.z -= 3
         center.wirecolor = clr
 
         axis = Cylinder()
@@ -138,7 +136,10 @@ rollout DynamicProjection "Dynamic Projection"
         axis.dir = object_to_align.dir
         axis.name = (type+"_collection_controller_axis")
         axis.wirecolor = clr
-
+        when select axis changes do(
+ 			deselect $*_collection_controller_axis*
+ 		)
+        
         axisCone = cone()
         axisCone.radius1 = 1.3
         axisCone.radius2 = 0
@@ -149,6 +150,9 @@ rollout DynamicProjection "Dynamic Projection"
         axisCone.name = (type+"_collection_controller_axis_cone")
         axisCone.wirecolor = clr
         in coordsys #local axisCone.pos.z += 30
+        when select axisCone changes do(
+ 			deselect $*_collection_controller_axis_cone*
+ 		)
 
         diameter = Cylinder()
         diameter.radius = 0.3
@@ -159,6 +163,9 @@ rollout DynamicProjection "Dynamic Projection"
         diameter.dir = object_to_align.dir
         diameter.transform = (rotateYmatrix 90) * diameter.transform
         diameter.wirecolor = clr
+        when select diameter changes do(
+ 			deselect $*_collection_controller_diameter*
+ 		)
         
         rotate_handle = sphere()
         rotate_handle.radius = 1.6
@@ -168,6 +175,9 @@ rollout DynamicProjection "Dynamic Projection"
         in coordsys #local rotate_handle.pos.x += object_to_align.radius
         rotate_handle.pivot = object_to_align.pos
         rotate_handle.wirecolor = clr
+        when select rotate_handle changes do(
+ 			deselect $*_collection_controller_rotate_handle*
+ 		)
 
         object_to_align.parent = center
         diameter.parent = rotate_handle
@@ -210,7 +220,6 @@ rollout DynamicProjection "Dynamic Projection"
 
     -- redraw points
     fn updatePoints = (
-        print "update points"
         -- for left point collection
         newPoints = drawPoints leftCollectionController "left"
         for i = 1 to newPoints.count do(
@@ -238,9 +247,7 @@ rollout DynamicProjection "Dynamic Projection"
     -- end redraw points
 
     fn createCollection = (
-        --print "create controller"
         if btn_Left.checked == true then (
-            --print "for left"
             btn_Left.checked = false
 
             leftCollectionController = createController "left"
@@ -252,6 +259,9 @@ rollout DynamicProjection "Dynamic Projection"
             projections = updateProjectionPoints points color_pink
             for i = 1 to projections.count do(
                 projections[i].parent = leftCollectionController
+            )
+            when select $*_projection* changes do(
+                deselect $*_projection*
             )
             when transform leftCollectionController changes do(
                 local points = #()
@@ -268,7 +278,6 @@ rollout DynamicProjection "Dynamic Projection"
             )
         )
         else(
-            --print "for right"
             btn_Right.checked = false
 
             rightCollectionController = createController "right"
@@ -319,7 +328,6 @@ rollout DynamicProjection "Dynamic Projection"
             return #continue
         )
         else (
-            format "Align Object To Face Finished.\n" 
             createCollection()
             return #end
         )
@@ -351,7 +359,7 @@ rollout DynamicProjection "Dynamic Projection"
             object_to_align = Cylinder()
             object_to_align.radius = 30
             object_to_align.height = 0.5
-            object_to_align.name = "left_collection_controller"
+            object_to_align.name = "left_collection_controller_panel"
 
             surface_obj = pickobject prompt:"Pick surface to move to."
             original_TM = object_to_align.transform
@@ -365,10 +373,11 @@ rollout DynamicProjection "Dynamic Projection"
         btn_Left.checked = false
         if state == true do(
             delete $*right_collection_controller*
+            delete $*right_point*
             object_to_align = Cylinder()
             object_to_align.radius = 30
             object_to_align.height = 0.5
-            object_to_align.name = "right_collection_controller"
+            object_to_align.name = "right_collection_controller_panel"
 
             surface_obj = pickobject prompt:"Pick surface to move to."
             original_TM = object_to_align.transform
