@@ -26,7 +26,7 @@ rollout DynamicProjection "Dynamic Projection"
 
     -- read data from csv
     fn readFile path = (
-        print "read csv file"
+        --print "read csv file"
         AssyFile = openfile path
         if (AssyFile != undefined) then
         (
@@ -61,6 +61,64 @@ rollout DynamicProjection "Dynamic Projection"
     -- end read data from csv
     
     -- create points collection
+    fn drawPoints parent type = (
+        local arr
+        local p_color
+        if type == "left" then (
+            arr = originLeftPointArray
+            p_color = color_pink
+        )
+        else (
+            arr = originRightPointArray
+            p_color = color_cyan
+        )
+        --print arr
+        if(arr.count > 0) do(
+            res = #()
+            ID   = arr[1][1]
+            minX = arr[1][2]
+            minY = arr[1][3]
+            maxX = arr[1][2]
+            maxY = arr[1][3]
+            for i = 2 to arr.count do(
+                if(minX > arr[i][2]) do(minX = arr[i][2])
+                if(minY > arr[i][3]) do(minY = arr[i][3])
+                if(maxX < arr[i][2]) do(maxX = arr[i][2])
+                if(maxY < arr[i][3]) do(maxY = arr[i][3])
+            )
+            bounce = spin_Radius.value
+            t = 0
+            format "minX : %, maxX : %, minY : %, maxY : %\n" minX maxX minY maxY
+            centerX = (maxX + minX) / 2
+            centerY = (maxY + minY) / 2
+            if((maxX-minX) > (maxY-minY)) then(
+                t = bounce / float(maxX-minX)
+            )
+            else(
+                t = bounce / float(maxY-minY)
+            )
+            format "bounce : %, t : %\n" bounce t
+            for i = 1 to arr.count do(
+                index = arr[i][1] as string
+                tmp_name = type+"_point_"+index
+                
+                sph = sphere()
+                sph.name = tmp_name
+                sph.wirecolor = p_color
+                sph.radius = 1
+                
+                sph.pos = parent.pos
+                sph.dir = parent.dir
+                in coordsys #local sph.pos.x += (centerX-arr[i][2])*t
+                in coordsys #local sph.pos.y += (centerY-arr[i][3])*t
+                in coordsys #local sph.pos.z += 200
+
+                append res sph
+            )
+            return res
+        )
+    )
+
     fn createController type = (
         local clr
         if type == "left" then(clr = color_pink) else(clr = color_cyan)
@@ -75,8 +133,27 @@ rollout DynamicProjection "Dynamic Projection"
         center.dir = object_to_align.dir
         center.wirecolor = clr
 
+        axis = Cylinder()
+        axis.radius = 0.3
+        axis.height = 30
+        axis.pos = object_to_align.pos
+        axis.dir = object_to_align.dir
+        axis.name = (type+"_collection_controller_axis")
+        axis.wirecolor = clr
+
+        axisCone = cone()
+        axisCone.radius1 = 1.3
+        axisCone.radius2 = 0
+        axisCone.height = 4
+        axisCone.heightsegs = 1
+        axisCone.pos = object_to_align.pos
+        axisCone.dir = object_to_align.dir
+        axisCone.name = (type+"_collection_controller_axis_cone")
+        axisCone.wirecolor = clr
+        in coordsys #local axisCone.pos.z += 30
+
         diameter = Cylinder()
-        diameter.radius = 0.75
+        diameter.radius = 0.3
         diameter.height = object_to_align.radius
         diameter.name = (type+"_collection_controller_diameter")
         diameter.pos = object_to_align.pos
@@ -89,29 +166,65 @@ rollout DynamicProjection "Dynamic Projection"
         rotate_handle.radius = 1.6
         rotate_handle.name = (type+"_collection_controller_rotate_handle")
         rotate_handle.pos = object_to_align.pos
-        rotate_handle.pivot = object_to_align.pos
         rotate_handle.dir = object_to_align.dir
         in coordsys #local rotate_handle.pos.x += object_to_align.radius
+        rotate_handle.pivot = object_to_align.pos
         rotate_handle.wirecolor = clr
 
         object_to_align.parent = center
-        diameter.parent = center
+        diameter.parent = rotate_handle
         rotate_handle.parent = center
+        axis.parent = center
+        axisCone.parent = center
         in coordsys #local center.pos.z += 3
 
         return center
     )
+
+    fn find_intersection s =(
+        testRay = ray s.pos (s.dir*[-1,-1,-1])
+        intersectRay surface_obj testRay
+    )
+
+    fn updateProjectionPoints points clr = (
+        if point != undefined do(
+            res = #()
+            for i = 1 to points.count do(
+                p = points[i]
+                p.ishidden=true
+                pro = sphere()
+                pro.name = (p.name+"_projection")
+                pro.radius = p.radius
+                pro.pos = p.pos
+                pro.wirecolor = clr
+
+                int_point = find_intersection p
+                if int_point != undefined then pro.pos = int_point.pos
+                append res pro
+            )
+            return res
+        )
+    )
+    
     fn createCollection = (
-        print "create controller"
+        --print "create controller"
         if btn_Left.checked == true then (
-            print "for left"
+            --print "for left"
             btn_Left.checked = false
 
             leftCollectionController = createController "left"
-            --print a
+            points = drawPoints leftCollectionController "left"
+            for i = 1 to points.count do(
+                points[i].parent = leftCollectionController
+            )
+            
+            projections = updateProjectionPoints points color_pink
+            for i = 1 to projections.count do(
+                projections[i].parent = leftCollectionController
+            )
         )
         else(
-            print "for right"
+            --print "for right"
             btn_Right.checked = false
 
             rightCollectionController = createController "right"
@@ -165,6 +278,8 @@ rollout DynamicProjection "Dynamic Projection"
         btn_Right.checked = false
         if state == true do(
             delete $*left_collection_controller*
+            delete $*left_point*
+
             object_to_align = Cylinder()
             object_to_align.radius = 30
             object_to_align.height = 0.5
@@ -194,6 +309,11 @@ rollout DynamicProjection "Dynamic Projection"
     )
     -- end right button event
 
+    -- spinner event
+    on spin_Radius changed newValue do (
+        print newValue
+    )
+    -- end spinner event
     -- export button event
     on btn_Export pressed do(
 
