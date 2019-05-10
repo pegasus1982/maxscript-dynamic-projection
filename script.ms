@@ -51,10 +51,6 @@ rollout DynamicProjection "Dynamic Projection"
                 append originLeftPointArray newLeftArrayItem
                 append originRightPointArray newRightArrayItem
             )
-            --print "left point array"
-            --print originLeftPointArray
-            --print "right point array"
-            --print originRightPointArray
         )
         else( messageBox "Open Failed" title:"Error!" )
     )
@@ -72,7 +68,6 @@ rollout DynamicProjection "Dynamic Projection"
             arr = originRightPointArray
             p_color = color_cyan
         )
-        --print arr
         if(arr.count > 0) do(
             res = #()
             ID   = arr[1][1]
@@ -102,17 +97,20 @@ rollout DynamicProjection "Dynamic Projection"
                 index = arr[i][1] as string
                 tmp_name = type+"_point_"+index
                 
-                sph = sphere()
-                sph.name = tmp_name
-                sph.wirecolor = p_color
-                sph.radius = 1
+                sph = getNodeByName tmp_name
+                if sph == undefined then(
+                    sph = sphere()
+                    sph.name = tmp_name
+                    sph.wirecolor = p_color
+                    sph.radius = 1
+                )
                 
                 sph.pos = parent.pos
                 sph.dir = parent.dir
                 in coordsys #local sph.pos.x += (centerX-arr[i][2])*t
                 in coordsys #local sph.pos.y += (centerY-arr[i][3])*t
                 in coordsys #local sph.pos.z += 200
-
+                
                 append res sph
             )
             return res
@@ -192,11 +190,15 @@ rollout DynamicProjection "Dynamic Projection"
             for i = 1 to points.count do(
                 p = points[i]
                 p.ishidden=true
-                pro = sphere()
-                pro.name = (p.name+"_projection")
-                pro.radius = p.radius
-                pro.pos = p.pos
-                pro.wirecolor = clr
+                tmp_name = (p.name+"_projection")
+                pro = getNodeByName tmp_name
+                if pro == undefined then(
+                    pro = sphere()
+                    pro.name = tmp_name
+                    pro.radius = p.radius
+                    pro.pos = p.pos
+                    pro.wirecolor = clr
+                )
 
                 int_point = find_intersection p
                 if int_point != undefined then pro.pos = int_point.pos
@@ -205,7 +207,36 @@ rollout DynamicProjection "Dynamic Projection"
             return res
         )
     )
-    
+
+    -- redraw points
+    fn updatePoints = (
+        print "update points"
+        -- for left point collection
+        newPoints = drawPoints leftCollectionController "left"
+        for i = 1 to newPoints.count do(
+            newPoints[i].parent = leftCollectionController
+        )
+
+        projections = updateProjectionPoints newPoints color_pink
+        for i = 1 to projections.count do(
+            projections[i].parent = leftCollectionController
+        )
+        -- end for left point collection
+
+        -- for right point collection
+        newPoints = drawPoints rightCollectionController "right"
+        for i = 1 to newPoints.count do(
+            newPoints[i].parent = rightCollectionController
+        )
+
+        projections = updateProjectionPoints newPoints color_cyan
+        for i = 1 to projections.count do(
+            projections[i].parent = rightCollectionController
+        )
+        -- end for right point collection
+    )
+    -- end redraw points
+
     fn createCollection = (
         --print "create controller"
         if btn_Left.checked == true then (
@@ -222,12 +253,48 @@ rollout DynamicProjection "Dynamic Projection"
             for i = 1 to projections.count do(
                 projections[i].parent = leftCollectionController
             )
+            when transform leftCollectionController changes do(
+                local points = #()
+                for i = 1 to originLeftPointArray.count do(
+                    index = originLeftPointArray[i][1] as string
+                    tmp_name = "left_point_"+index
+                    obj = getNodeByName tmp_name
+                    append points obj
+                )
+                local projections = updateProjectionPoints points color_pink
+                for i = 1 to projections.count do(
+                    projections[i].parent = leftCollectionController
+                )
+            )
         )
         else(
             --print "for right"
             btn_Right.checked = false
 
             rightCollectionController = createController "right"
+
+            points = drawPoints rightCollectionController "right"
+            for i = 1 to points.count do(
+                points[i].parent = rightCollectionController
+            )
+            
+            projections = updateProjectionPoints points color_cyan
+            for i = 1 to projections.count do(
+                projections[i].parent = rightCollectionController
+            )
+            when transform rightCollectionController changes do(
+                local points = #()
+                for i = 1 to originRightPointArray.count do(
+                    index = originRightPointArray[i][1] as string
+                    tmp_name = "right_point_"+index
+                    obj = getNodeByName tmp_name
+                    append points obj
+                )
+                local projections = updateProjectionPoints points color_cyan
+                for i = 1 to projections.count do(
+                    projections[i].parent = rightCollectionController
+                )
+            )
         )
     )
     -- end create point collection
@@ -257,7 +324,8 @@ rollout DynamicProjection "Dynamic Projection"
             return #end
         )
     )
-    -- and assign controller to surface
+    -- end assign controller to surface
+
     -- event listeners
     -- open file dialog
     on btn_Browse pressed do (
@@ -311,7 +379,7 @@ rollout DynamicProjection "Dynamic Projection"
 
     -- spinner event
     on spin_Radius changed newValue do (
-        print newValue
+        updatePoints()
     )
     -- end spinner event
     -- export button event
