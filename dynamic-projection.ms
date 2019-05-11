@@ -197,7 +197,7 @@ rollout DynamicProjection "Dynamic Projection"
         intersectRay surface_obj testRay
     )
 
-    fn updateProjectionPoints points clr = (
+    fn updatePlanarProjectionPoints points clr = (
         if points != undefined do(
             res = #()
             for i = 1 to points.count do(
@@ -230,7 +230,7 @@ rollout DynamicProjection "Dynamic Projection"
                 newPoints[i].parent = leftCollectionController
             )
 
-            projections = updateProjectionPoints newPoints color_pink
+            projections = updatePlanarProjectionPoints newPoints color_pink
             for i = 1 to projections.count do(
                 projections[i].parent = leftCollectionController
             )
@@ -244,7 +244,7 @@ rollout DynamicProjection "Dynamic Projection"
                 newPoints[i].parent = rightCollectionController
             )
 
-            projections = updateProjectionPoints newPoints color_cyan
+            projections = updatePlanarProjectionPoints newPoints color_cyan
             for i = 1 to projections.count do(
                 projections[i].parent = rightCollectionController
             )
@@ -263,7 +263,7 @@ rollout DynamicProjection "Dynamic Projection"
                 points[i].parent = leftCollectionController
             )
             
-            projections = updateProjectionPoints points color_pink
+            projections = updatePlanarProjectionPoints points color_pink
             for i = 1 to projections.count do(
                 projections[i].parent = leftCollectionController
             )
@@ -278,7 +278,7 @@ rollout DynamicProjection "Dynamic Projection"
                     obj = getNodeByName tmp_name
                     append points obj
                 )
-                local projections = updateProjectionPoints points color_pink
+                local projections = updatePlanarProjectionPoints points color_pink
                 for i = 1 to projections.count do(
                     projections[i].parent = leftCollectionController
                 )
@@ -294,7 +294,7 @@ rollout DynamicProjection "Dynamic Projection"
                 points[i].parent = rightCollectionController
             )
             
-            projections = updateProjectionPoints points color_cyan
+            projections = updatePlanarProjectionPoints points color_cyan
             for i = 1 to projections.count do(
                 projections[i].parent = rightCollectionController
             )
@@ -306,7 +306,7 @@ rollout DynamicProjection "Dynamic Projection"
                     obj = getNodeByName tmp_name
                     append points obj
                 )
-                local projections = updateProjectionPoints points color_cyan
+                local projections = updatePlanarProjectionPoints points color_cyan
                 for i = 1 to projections.count do(
                     projections[i].parent = rightCollectionController
                 )
