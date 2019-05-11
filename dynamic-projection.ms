@@ -1,12 +1,13 @@
 rollout DynamicProjection "Dynamic Projection"
 (
     -- rollout ui
-    editText edit_FilePath   "File Name" pos:[20,  15] width:250
-    button   btn_Browse      "Browse..." pos:[287, 13]
-    spinner  spin_Radius     "Radius"    pos:[43,  45] width:70  type:#integer range:[20,600,100] 
-    checkButton   btn_Left   "Left"      pos:[220, 42] width:60
-    checkButton   btn_Right  "Right"     pos:[290, 42] width:60
-    button   btn_Export      "Export"    pos:[370, 13] width:110 height:50
+    editText edit_FilePath   "File Name" pos:[17,  15] width:275
+    button   btn_Browse      "Browse..." pos:[302, 13]
+    spinner  spin_Radius     "Radius"    pos:[40,  45] width:70  type:#integer range:[20,600,100]
+    checkbox check_spherical "Spherical Projection" pos:[117, 45]
+    checkButton   btn_Left   "Left"      pos:[235, 42] width:60
+    checkButton   btn_Right  "Right"     pos:[305, 42] width:60
+    button   btn_Export      "Export"    pos:[375, 13] width:110 height:50
     -- end rollout ui
 
     local originLeftPointArray = #()
