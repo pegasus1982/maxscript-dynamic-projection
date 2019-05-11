@@ -182,7 +182,7 @@ rollout DynamicProjection "Dynamic Projection"
         )
 
         object_to_align.parent = center
-        diameter.parent = rotate_handle
+        diameter.parent = center
         rotate_handle.parent = center
         axis.parent = center
         axisCone.parent = center
@@ -191,9 +191,13 @@ rollout DynamicProjection "Dynamic Projection"
         return center
     )
 
-    fn find_intersection s =(
+    fn findPlanarIntersection s = (
         testRay = ray s.pos (s.dir*[-1,-1,-1])
         intersectRay surface_obj testRay
+    )
+
+    fn findSphericalIntersection s = (
+
     )
 
     fn updatePlanarProjectionPoints points clr = (
@@ -213,7 +217,32 @@ rollout DynamicProjection "Dynamic Projection"
                     pro.wirecolor = clr
                 )
 
-                int_point = find_intersection p
+                int_point = findPlanarIntersection p
+                if int_point != undefined then pro.pos = int_point.pos
+                append res pro
+            )
+            return res
+        )
+    )
+
+    fn updateSphericalProjectionPoints points clr = (
+        print "spherical projection"
+        if points != undefined do(
+            res = #()
+            for i = 1 to points.count do(
+                p = points[i]
+                p.ishidden=true
+                tmp_name = (p.name+"_projection")
+                pro = getNodeByName tmp_name
+                if pro == undefined then(
+                    pro = sphere()
+                    pro.name = tmp_name
+                    pro.radius = p.radius
+                    pro.pos = p.pos
+                    pro.wirecolor = clr
+                )
+
+                int_point = findSphericalIntersection p
                 if int_point != undefined then pro.pos = int_point.pos
                 append res pro
             )
@@ -262,10 +291,18 @@ rollout DynamicProjection "Dynamic Projection"
             for i = 1 to points.count do(
                 points[i].parent = leftCollectionController
             )
-            
-            projections = updatePlanarProjectionPoints points color_pink
-            for i = 1 to projections.count do(
-                projections[i].parent = leftCollectionController
+            local projections
+            if check_spherical.checked == false then(
+                projections = updatePlanarProjectionPoints points color_pink
+                for i = 1 to projections.count do(
+                    projections[i].parent = leftCollectionController
+                )
+            )
+            else(
+                projections = updateSphericalProjectionPoints points color_pink
+                for i = 1 to projections.count do(
+                    projections[i].parent = leftCollectionController
+                )
             )
             when select $*_projection* changes do(
                 deselect $*_projection*
