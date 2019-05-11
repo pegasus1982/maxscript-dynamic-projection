@@ -104,7 +104,6 @@ rollout DynamicProjection "Dynamic Projection"
                     sph.dir = parent.dir
                     in coordsys #local sph.pos.x += (centerX-arr[i][2])*t
                     in coordsys #local sph.pos.y += (centerY-arr[i][3])*t
-                    in coordsys #local sph.pos.z += 200
                     
                     append res sph
                 )
@@ -202,6 +201,7 @@ rollout DynamicProjection "Dynamic Projection"
             res = #()
             for i = 1 to points.count do(
                 p = points[i]
+                in coordsys #local p.pos.z += 200
                 p.ishidden=true
                 tmp_name = (p.name+"_projection")
                 pro = getNodeByName tmp_name
