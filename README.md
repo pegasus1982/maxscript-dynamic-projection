@@ -82,15 +82,21 @@
 
 ​​The output should be a CSV file saved in the same folder as the source array. The name of the file should be the name of the object. 
 
-[1]: /ep/redirect/image?url=https%3A%2F%2Fpaper-attachments.dropbox.com%2Fs_79CE7879B6B45B81E2CE9F5E700FEB5A222E5A64FBE0C8A2E741EB88D509825B_1557279285664_1.png&hmac=kwvN%2Fa68lh8nhnVjz%2BZh%2BnC5nfobKAANLXVcTGJcpVo%3D
-[2]: /ep/redirect/image?url=https%3A%2F%2Fpaper-attachments.dropbox.com%2Fs_79CE7879B6B45B81E2CE9F5E700FEB5A222E5A64FBE0C8A2E741EB88D509825B_1557279301533_0.jpg&hmac=HlXuGRe7p5kfXnYz7dla2TJTaOv0w%2FZEd0c0tgvBOTM%3D
-[3]: /ep/redirect/image?url=https%3A%2F%2Fpaper-attachments.dropbox.com%2Fs_79CE7879B6B45B81E2CE9F5E700FEB5A222E5A64FBE0C8A2E741EB88D509825B_1557279309280_2.png&hmac=qXSXoUi%2B6DDHij6k1DlkM1kUBn3Q1ssuvJ4wak0BwUA%3D
-[4]: /ep/redirect/image?url=https%3A%2F%2Fpaper-attachments.dropbox.com%2Fs_79CE7879B6B45B81E2CE9F5E700FEB5A222E5A64FBE0C8A2E741EB88D509825B_1557279314844_3.png&hmac=uNzvNiwqAR7rMHhYFDpbIk%2Bw4ggZ%2FyGkTUCIoKHaAaI%3D
-[5]: /ep/redirect/image?url=https%3A%2F%2Fpaper-attachments.dropbox.com%2Fs_79CE7879B6B45B81E2CE9F5E700FEB5A222E5A64FBE0C8A2E741EB88D509825B_1557279332671_4.png&hmac=s%2F7qjaQPQzcpDYTRFXz4%2FxyIpmm23mOTS0kqTJ1baW4%3D
-[6]: /ep/redirect/image?url=https%3A%2F%2Fpaper-attachments.dropbox.com%2Fs_79CE7879B6B45B81E2CE9F5E700FEB5A222E5A64FBE0C8A2E741EB88D509825B_1557279339494_5.png&hmac=7RvM59kDNF2g1yZOKMeEhb%2B3STNB2XP%2BxJaUfDGxYDU%3D
-[7]: /ep/redirect/image?url=https%3A%2F%2Fpaper-attachments.dropbox.com%2Fs_79CE7879B6B45B81E2CE9F5E700FEB5A222E5A64FBE0C8A2E741EB88D509825B_1557279351098_6.png&hmac=YnDRh9i6fCn60So4t3c0ATsQB5GnEYfRxg%2FBo4S3LyM%3D
-[8]: /ep/redirect/image?url=https%3A%2F%2Fpaper-attachments.dropbox.com%2Fs_79CE7879B6B45B81E2CE9F5E700FEB5A222E5A64FBE0C8A2E741EB88D509825B_1557279365028_7.png&hmac=ScOsQ9TT%2FM0m8%2FzkHMqHsIf30FfnF4qPuU43fF7xc70%3D
-[9]: /ep/redirect/image?url=https%3A%2F%2Fpaper-attachments.dropbox.com%2Fs_79CE7879B6B45B81E2CE9F5E700FEB5A222E5A64FBE0C8A2E741EB88D509825B_1557279368371_8.png&hmac=Vp%2BsGc4xN9s0t9Jlzjhg9CUIBUBya3UmIPQMZkByL90%3D
-[10]: /ep/redirect/image?url=https%3A%2F%2Fpaper-attachments.dropbox.com%2Fs_79CE7879B6B45B81E2CE9F5E700FEB5A222E5A64FBE0C8A2E741EB88D509825B_1557279371446_9.png&hmac=idbBczbdMTwYyrPevD7Fvs31SBB7doe1iyb6Y0Yx2UI%3D
-[11]: /ep/redirect/image?url=https%3A%2F%2Fpaper-attachments.dropbox.com%2Fs_79CE7879B6B45B81E2CE9F5E700FEB5A222E5A64FBE0C8A2E741EB88D509825B_1557279379069_10.png&hmac=W0%2F6uY5Ph4DHswMCUdGIzPEAMpucNK%2BVfiELwQz%2F3Vc%3D
-[12]: /ep/redirect/image?url=https%3A%2F%2Fpaper-attachments.dropbox.com%2Fs_79CE7879B6B45B81E2CE9F5E700FEB5A222E5A64FBE0C8A2E741EB88D509825B_1557279384771_11.png&hmac=s97ZpLEoQbV4zkhR4TWSLIy4brWnB4mEH76XUO8KEws%3D
+## Extended Feature:
+
+Spherical projection.
+
+Current projection is planar. 
+![Positioning Example](screenshots/13.png)
+
+We need a feature that enables “spherical projection”
+
+Essentially, a circle is created with the center of the array as the center and the position of the point as the radius, the third reference axis is the normal orientation. The point is then placed at the intersection between the circle and the object. 
+
+Here is a 2d representation of this:
+![Positioning Example](screenshots/14.png)
+
+Here is a representation of a single line of points in 3d
+![Positioning Example](screenshots/15.png)
+
+The script needs to create a circle for each point 
