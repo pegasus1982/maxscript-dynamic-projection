@@ -237,7 +237,7 @@ rollout DynamicProjection "Dynamic Projection"
             in coordsys #local rotate cir (eulerangles 0 90 -d_gamma)
 
             --divide circle to sub segment
-            local div = 7
+            local div = 5
             convertToSplineShape cir
             for i=1 to (numsplines cir) do
             (
@@ -247,11 +247,17 @@ rollout DynamicProjection "Dynamic Projection"
             updateshape cir
             -- end divide circle
         )
+        -- scale circle
+        local rate = (spin_Radius.value as float)/100
+        -- end scale circle
         -- get vertex from circle
         local cir_points = #()
         for s = 1 to (numsplines cir) do(
             for k = 1 to (numknots cir s) do (
-                append cir_points (getKnotPoint cir s k)
+                local p = getKnotPoint cir s k
+                local d_offset = p-posCenter
+                p = posCenter+d_offset*rate
+                append cir_points p
             )
         )
         -- end get vertex from circle
