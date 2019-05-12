@@ -21,6 +21,9 @@ rollout DynamicProjection "Dynamic Projection"
     global leftCollectionPointsOffset
     global rightCollectionPointsOffset
 
+    global leftProjectionType --false:planar, true:spherical
+    global rightProjectionType --false:planar, true:spherical
+
     global object_to_align
     global surface_obj
     global original_TM
@@ -317,7 +320,7 @@ rollout DynamicProjection "Dynamic Projection"
         -- end check intersection points
         return arr_candidates[finalIndex]
     )
-
+    -- update planar projection points
     fn updatePlanarProjectionPoints points clr = (
         if points != undefined do(
             res = #()
@@ -342,7 +345,8 @@ rollout DynamicProjection "Dynamic Projection"
             return res
         )
     )
-
+    -- end update planar projection points
+    -- update spherical projection points
     fn updateSphericalProjectionPoints points clr = (
         -- print "spherical projection"
         if points != undefined do(
@@ -367,6 +371,7 @@ rollout DynamicProjection "Dynamic Projection"
             return res
         )
     )
+    -- end update spherical projection points
 
     -- redraw points
     fn updatePoints = (
@@ -377,7 +382,7 @@ rollout DynamicProjection "Dynamic Projection"
                 newPoints[i].parent = leftCollectionController
             )
 
-            if(check_spherical.checked == false) then(
+            if(leftProjectionType == false) then(
                 projections = updatePlanarProjectionPoints newPoints color_pink
                 for i = 1 to projections.count do(
                     projections[i].parent = leftCollectionController
@@ -398,7 +403,7 @@ rollout DynamicProjection "Dynamic Projection"
             for i = 1 to newPoints.count do(
                 newPoints[i].parent = rightCollectionController
             )
-            if(check_spherical.checked == false) then(
+            if(rightProjectionType == false) then(
                 projections = updatePlanarProjectionPoints newPoints color_cyan
                 for i = 1 to projections.count do(
                     projections[i].parent = rightCollectionController
@@ -415,6 +420,7 @@ rollout DynamicProjection "Dynamic Projection"
     )
     -- end redraw points
 
+    -- create point collection
     fn createCollection = (
         if btn_Left.checked == true then (
             btn_Left.checked = false
@@ -428,6 +434,8 @@ rollout DynamicProjection "Dynamic Projection"
             
             -- get projection
             -- get planar projection
+            leftProjectionType = check_spherical.checked
+            
             local projections
             if check_spherical.checked == false then(
                 projections = updatePlanarProjectionPoints points color_pink
@@ -449,6 +457,7 @@ rollout DynamicProjection "Dynamic Projection"
             )
             -- rotate event
             when transform leftCollectionController changes do(
+                check_spherical.checked=leftProjectionType
                 local points = #()
                 for i = 1 to originLeftPointArray.count do(
                     index = originLeftPointArray[i][1] as string
@@ -456,7 +465,7 @@ rollout DynamicProjection "Dynamic Projection"
                     obj = getNodeByName tmp_name
                     append points obj
                 )
-                if(check_spherical.checked == false) then(
+                if(leftProjectionType == false) then(
                     local projections = updatePlanarProjectionPoints points color_pink
                     for i = 1 to projections.count do(
                         projections[i].parent = leftCollectionController
@@ -480,6 +489,7 @@ rollout DynamicProjection "Dynamic Projection"
             for i = 1 to points.count do(
                 points[i].parent = rightCollectionController
             )
+            rightProjectionType = check_spherical.checked
             local projections
             if check_spherical.checked == false then(
                 projections = updatePlanarProjectionPoints points color_cyan
@@ -496,6 +506,7 @@ rollout DynamicProjection "Dynamic Projection"
 
             -- rotate event
             when transform rightCollectionController changes do(
+                check_spherical.checked=rightProjectionType
                 local points = #()
                 for i = 1 to originRightPointArray.count do(
                     index = originRightPointArray[i][1] as string
@@ -503,7 +514,7 @@ rollout DynamicProjection "Dynamic Projection"
                     obj = getNodeByName tmp_name
                     append points obj
                 )
-                if(check_spherical.checked == false) then(
+                if(rightProjectionType == false) then(
                     local projections = updatePlanarProjectionPoints points color_cyan
                     for i = 1 to projections.count do(
                         projections[i].parent = rightCollectionController
@@ -523,6 +534,7 @@ rollout DynamicProjection "Dynamic Projection"
 
     -- assign controller to surface
     fn assign_normal msg ir obj faceNum shift ctrl alt = (
+        print msg
         if msg == #freeMove then (
             if ir != undefined then (
                 object_to_align.pos = ir.pos 
@@ -568,18 +580,22 @@ rollout DynamicProjection "Dynamic Projection"
     on btn_Left changed state do (
         btn_Right.checked = false
         if state == true do(
-            delete $*left_collection_controller*
-            delete $*left_point*
-            delete $*Circle*
+            try(
+                delete $*left_collection_controller*
+                delete $*left_point*
+                delete $*Circle*
 
-            object_to_align = Cylinder()
-            object_to_align.radius = 30
-            object_to_align.height = 0.5
-            object_to_align.name = "left_collection_controller_panel"
+                object_to_align = Cylinder()
+                object_to_align.radius = 30
+                object_to_align.height = 0.5
+                object_to_align.name = "left_collection_controller_panel"
 
-            surface_obj = pickobject prompt:"Pick surface to move to."
-            original_TM = object_to_align.transform
-            a = mouseTrack on:surface_obj trackCallback:assign_normal
+                surface_obj = pickobject prompt:"Pick surface to move to."
+                original_TM = object_to_align.transform
+                a = mouseTrack on:surface_obj trackCallback:assign_normal
+            )catch(
+                btn_Left.checked = false
+            )
         )
     )
     -- end left button event
@@ -588,16 +604,20 @@ rollout DynamicProjection "Dynamic Projection"
     on btn_Right changed state do(
         btn_Left.checked = false
         if state == true do(
-            delete $*right_collection_controller*
-            delete $*right_point*
-            object_to_align = Cylinder()
-            object_to_align.radius = 30
-            object_to_align.height = 0.5
-            object_to_align.name = "right_collection_controller_panel"
+            try(
+                delete $*right_collection_controller*
+                delete $*right_point*
+                object_to_align = Cylinder()
+                object_to_align.radius = 30
+                object_to_align.height = 0.5
+                object_to_align.name = "right_collection_controller_panel"
 
-            surface_obj = pickobject prompt:"Pick surface to move to."
-            original_TM = object_to_align.transform
-            a = mouseTrack on:surface_obj trackCallback:assign_normal
+                surface_obj = pickobject prompt:"Pick surface to move to."
+                original_TM = object_to_align.transform
+                a = mouseTrack on:surface_obj trackCallback:assign_normal
+            )catch(
+                btn_Right.checked = false
+            )
         )
     )
     -- end right button event
