@@ -26,7 +26,6 @@ rollout DynamicProjection "Dynamic Projection"
 
     global object_to_align
     global surface_obj
-    global original_TM
 
     -- read data from csv
     fn readDataFile path = (
@@ -59,7 +58,7 @@ rollout DynamicProjection "Dynamic Projection"
     )
     -- end read data from csv
     
-    -- create points collection
+    -- create origin points
     fn drawPoints parent type = (
         local arr
         local p_color
@@ -137,7 +136,9 @@ rollout DynamicProjection "Dynamic Projection"
             return res
         )
     )
+    -- end create origin points
 
+    -- create controller
     fn createController type = (
         local clr
         if type == "left" then(clr = color_pink) else(clr = color_cyan)
@@ -225,12 +226,16 @@ rollout DynamicProjection "Dynamic Projection"
 
         return center
     )
+    -- end create controller
 
+    -- get intersection point of planar projection
     fn findPlanarIntersection s = (
         testRay = ray s.pos (s.dir*[-1,-1,-1])
         intersectRay surface_obj testRay
     )
+    -- end get intersection point of planar projection
 
+    -- get intersection point of spherical projection
     fn findSphericalIntersection s s_offset = (
         local posCenter = s.parent.pos
         local posCurrent = s.pos
@@ -330,6 +335,8 @@ rollout DynamicProjection "Dynamic Projection"
         -- end check intersection points
         return arr_candidates[finalIndex]
     )
+    -- end get intersection point of spherical projection
+
     -- update planar projection points
     fn updatePlanarProjectionPoints points clr = (
         if points != undefined do(
@@ -356,6 +363,7 @@ rollout DynamicProjection "Dynamic Projection"
         )
     )
     -- end update planar projection points
+
     -- update spherical projection points
     fn updateSphericalProjectionPoints points clr = (
         -- print "spherical projection"
@@ -430,7 +438,7 @@ rollout DynamicProjection "Dynamic Projection"
     )
     -- end redraw points
 
-    -- create point collection
+    -- create points collection
     fn createCollection = (
         if btn_Left.checked == true then (
             btn_Left.checked = false
@@ -554,7 +562,7 @@ rollout DynamicProjection "Dynamic Projection"
             -- end rotate event
         )
     )
-    -- end create point collection
+    -- end create points collection
 
     -- assign controller to surface
     fn assign_normal msg ir obj faceNum shift ctrl alt = (
@@ -614,7 +622,6 @@ rollout DynamicProjection "Dynamic Projection"
                 object_to_align.name = "left_collection_controller_panel"
 
                 surface_obj = pickobject prompt:"Pick surface to move to."
-                original_TM = object_to_align.transform
                 a = mouseTrack on:surface_obj trackCallback:assign_normal
             )catch(
                 btn_Left.checked = false
@@ -636,7 +643,6 @@ rollout DynamicProjection "Dynamic Projection"
                 object_to_align.name = "right_collection_controller_panel"
 
                 surface_obj = pickobject prompt:"Pick surface to move to."
-                original_TM = object_to_align.transform
                 a = mouseTrack on:surface_obj trackCallback:assign_normal
             )catch(
                 btn_Right.checked = false
