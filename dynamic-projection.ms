@@ -18,12 +18,15 @@ rollout DynamicProjection "Dynamic Projection"
     global leftCollectionController
     global rightCollectionController
 
+    global leftCollectionPointsOffset
+    global rightCollectionPointsOffset
+
     global object_to_align
     global surface_obj
     global original_TM
 
     -- read data from csv
-    fn readFile path = (
+    fn readDataFile path = (
         AssyFile = openfile path
         if (AssyFile != undefined) then
         (
@@ -88,6 +91,16 @@ rollout DynamicProjection "Dynamic Projection"
             else(
                 t = bounce / float(maxY-minY)
             )
+
+            -- reset offset array
+            if type == "left" then(
+                leftCollectionPointsOffset = #()
+            )
+            else(
+
+            )
+            -- end reset offset array
+
             for i = 1 to arr.count do(
                 index = arr[i][1] as string
                 tmp_name = type+"_point_"+index
@@ -104,6 +117,15 @@ rollout DynamicProjection "Dynamic Projection"
                     sph.dir = parent.dir
                     in coordsys #local sph.pos.x += (centerX-arr[i][2])*t
                     in coordsys #local sph.pos.y += (centerY-arr[i][3])*t
+                    in coordsys #local sph.pos.z += 3
+
+                    if type == "left" then(
+                        tmp_arr = [(centerX-arr[i][2])*t, (centerY-arr[i][3])*t]
+                        append leftCollectionPointsOffset tmp_arr
+                    )
+                    else(
+
+                    )
                     
                     append res sph
                 )
@@ -196,8 +218,98 @@ rollout DynamicProjection "Dynamic Projection"
         intersectRay surface_obj testRay
     )
 
-    fn findSphericalIntersection s = (
+    fn findSphericalIntersection s s_offset = (
+        local posCenter = s.parent.pos
+        local posCurrent = s.pos
+        local radius = distance posCenter posCurrent
+        -- create circle
+        local tmp_name = s.name+"_circle_ray"
+        cir = getNodeByName tmp_name
+        if cir == undefined then(
+            cir = circle()
+            cir.ishidden = true
+            cir.name = tmp_name
+            cir.parent = s.parent
+            cir.radius = radius
+            cir.pos = posCenter
+            cir.dir = s.parent.dir
+            local d_gamma = atan(s_offset[1]/(s_offset[2] as float))
+            in coordsys #local rotate cir (eulerangles 0 90 -d_gamma)
 
+            --divide circle to sub segment
+            local div = 7
+            convertToSplineShape cir
+            for i=1 to (numsplines cir) do
+            (
+                for j=(numSegments cir i) to 1 by-1 do
+                subdividesegment cir i j div
+            )
+            updateshape cir
+            -- end divide circle
+        )
+        -- get vertex from circle
+        local cir_points = #()
+        for s = 1 to (numsplines cir) do(
+            for k = 1 to (numknots cir s) do (
+                append cir_points (getKnotPoint cir s k)
+            )
+        )
+        -- end get vertex from circle
+
+        -- get intersection points
+        local p_intersections = #()
+        for i = 1 to (cir_points.count-1) do (
+            local pA = cir_points[i]
+            local pB = cir_points[i+1]
+
+            --check positive direction
+            --configurate ray
+            local n = normalize (pB-pA)
+            local testray = ray pA n
+            --end configrate ray
+            local i = intersectRay surface_obj testRay
+            if (i != undefined) do(
+                append p_intersections i.pos
+            )
+            --end check positive direction
+            --check negative direction
+            --configurate ray
+            n = normalize (pA-pB)
+            testray = ray pB n
+            --end configrate ray
+            i = intersectRay surface_obj testRay
+            if (i != undefined) do(
+                append p_intersections i.pos
+            )
+            --end check negative direction
+        )
+        -- end get intersection points
+
+        -- check intersection points
+        -- format "radius %\n" radius
+        local limit = 2
+        local arr_candidates = #()
+        for i = 1 to p_intersections.count do(
+            p_candidate = p_intersections[i]
+            -- check distance from center
+            dis = distance posCenter p_candidate
+            if (abs(radius-dis)<limit) do(
+                append arr_candidates p_candidate
+            )
+            -- end check distance from center
+        )
+        local min_dis = radius
+        local finalIndex = 1
+        for i=1 to arr_candidates.count do(
+            dis = distance arr_candidates[i] posCurrent
+            if(dis < min_dis) do(
+                min_dis = dis
+                finalIndex = i
+            )
+        )
+        -- format "index : %, pos : %\n" finalIndex arr_candidates[finalIndex]
+        -- end check intersection points
+        return arr_candidates[finalIndex]
     )
 
     fn updatePlanarProjectionPoints points clr = (
@@ -226,10 +338,10 @@ rollout DynamicProjection "Dynamic Projection"
     )
 
     fn updateSphericalProjectionPoints points clr = (
-        print "spherical projection"
+        -- print "spherical projection"
         if points != undefined do(
             res = #()
-            for i = 1 to points.count do(
+            for i = 1 to points.count do( --points.count
                 p = points[i]
                 p.ishidden=true
                 tmp_name = (p.name+"_projection")
@@ -242,8 +354,8 @@ rollout DynamicProjection "Dynamic Projection"
                     pro.wirecolor = clr
                 )
 
-                int_point = findSphericalIntersection p
-                if int_point != undefined then pro.pos = int_point.pos
+                int_point = findSphericalIntersection p leftCollectionPointsOffset[i]
+                if int_point != undefined then pro.pos = int_point
                 append res pro
             )
             return res
@@ -259,9 +371,17 @@ rollout DynamicProjection "Dynamic Projection"
                 newPoints[i].parent = leftCollectionController
             )
 
-            projections = updatePlanarProjectionPoints newPoints color_pink
-            for i = 1 to projections.count do(
-                projections[i].parent = leftCollectionController
+            if(check_spherical.checked == false) then(
+                projections = updatePlanarProjectionPoints newPoints color_pink
+                for i = 1 to projections.count do(
+                    projections[i].parent = leftCollectionController
+                )
+            )
+            else(
+                projections = updateSphericalProjectionPoints newPoints color_pink
+                for i = 1 to projections.count do(
+                    projections[i].parent = leftCollectionController
+                )
             )
         )
         -- end for left point collection
@@ -272,10 +392,17 @@ rollout DynamicProjection "Dynamic Projection"
             for i = 1 to newPoints.count do(
                 newPoints[i].parent = rightCollectionController
             )
-
-            projections = updatePlanarProjectionPoints newPoints color_cyan
-            for i = 1 to projections.count do(
-                projections[i].parent = rightCollectionController
+            if(check_spherical.checked == false) then(
+                projections = updatePlanarProjectionPoints newPoints color_cyan
+                for i = 1 to projections.count do(
+                    projections[i].parent = rightCollectionController
+                )
+            )
+            else(
+                projections = updateSphericalProjectionPoints newPoints color_cyan
+                for i = 1 to projections.count do(
+                    projections[i].parent = rightCollectionController
+                )
             )
         )
         -- end for right point collection
@@ -290,7 +417,11 @@ rollout DynamicProjection "Dynamic Projection"
             points = drawPoints leftCollectionController "left"
             for i = 1 to points.count do(
                 points[i].parent = leftCollectionController
+                points[i].ishidden = true
             )
+            
+            -- get projection
+            -- get planar projection
             local projections
             if check_spherical.checked == false then(
                 projections = updatePlanarProjectionPoints points color_pink
@@ -298,15 +429,19 @@ rollout DynamicProjection "Dynamic Projection"
                     projections[i].parent = leftCollectionController
                 )
             )
+            -- get spherical projection
             else(
                 projections = updateSphericalProjectionPoints points color_pink
                 for i = 1 to projections.count do(
                     projections[i].parent = leftCollectionController
                 )
             )
+            -- end get projection
+
             when select $*_projection* changes do(
                 deselect $*_projection*
             )
+            -- rotate event
             when transform leftCollectionController changes do(
                 local points = #()
                 for i = 1 to originLeftPointArray.count do(
@@ -315,11 +450,20 @@ rollout DynamicProjection "Dynamic Projection"
                     obj = getNodeByName tmp_name
                     append points obj
                 )
-                local projections = updatePlanarProjectionPoints points color_pink
-                for i = 1 to projections.count do(
-                    projections[i].parent = leftCollectionController
+                if(check_spherical.checked == false) then(
+                    local projections = updatePlanarProjectionPoints points color_pink
+                    for i = 1 to projections.count do(
+                        projections[i].parent = leftCollectionController
+                    )
+                )
+                else(
+                    projections = updateSphericalProjectionPoints points color_pink
+                    for i = 1 to projections.count do(
+                        projections[i].parent = leftCollectionController
+                    )
                 )
             )
+            -- end rotate event
         )
         else(
             btn_Right.checked = false
@@ -330,11 +474,21 @@ rollout DynamicProjection "Dynamic Projection"
             for i = 1 to points.count do(
                 points[i].parent = rightCollectionController
             )
-            
-            projections = updatePlanarProjectionPoints points color_cyan
-            for i = 1 to projections.count do(
-                projections[i].parent = rightCollectionController
+            local projections
+            if check_spherical.checked == false then(
+                projections = updatePlanarProjectionPoints points color_cyan
+                for i = 1 to projections.count do(
+                    projections[i].parent = rightCollectionController
+                )
             )
+            else(
+                projections = updateSphericalProjectionPoints points color_cyan
+                for i = 1 to projections.count do(
+                    projections[i].parent = rightCollectionController
+                )
+            )
+
+            -- rotate event
             when transform rightCollectionController changes do(
                 local points = #()
                 for i = 1 to originRightPointArray.count do(
@@ -343,11 +497,20 @@ rollout DynamicProjection "Dynamic Projection"
                     obj = getNodeByName tmp_name
                     append points obj
                 )
-                local projections = updatePlanarProjectionPoints points color_cyan
-                for i = 1 to projections.count do(
-                    projections[i].parent = rightCollectionController
+                if(check_spherical.checked == false) then(
+                    local projections = updatePlanarProjectionPoints points color_cyan
+                    for i = 1 to projections.count do(
+                        projections[i].parent = rightCollectionController
+                    )
+                )
+                else(
+                    local projections = updateSphericalProjectionPoints points color_cyan
+                    for i = 1 to projections.count do(
+                        projections[i].parent = rightCollectionController
+                    )
                 )
             )
+            -- end rotate event
         )
     )
     -- end create point collection
@@ -388,7 +551,7 @@ rollout DynamicProjection "Dynamic Projection"
         result = dlg.showDialog()
         if(result.Equals result.OK) do(
             edit_FilePath.text = dlg.fileName
-            readFile dlg.fileName
+            readDataFile dlg.fileName
         )
     )
     -- end open file dialog
@@ -399,6 +562,7 @@ rollout DynamicProjection "Dynamic Projection"
         if state == true do(
             delete $*left_collection_controller*
             delete $*left_point*
+            delete $*Circle*
 
             object_to_align = Cylinder()
             object_to_align.radius = 30
@@ -472,10 +636,10 @@ rollout DynamicProjection "Dynamic Projection"
             )
         )
         -- end get right position projected to surface
-        print "left"
-        print leftPositionProjected
-        print "right"
-        print rightPositionProjected
+        -- print "left"
+        -- print leftPositionProjected
+        -- print "right"
+        -- print rightPositionProjected
 
         -- open file
         folder = getFilenamePath edit_FilePath.text
