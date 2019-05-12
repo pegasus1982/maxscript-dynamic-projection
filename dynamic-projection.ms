@@ -623,7 +623,6 @@ rollout DynamicProjection "Dynamic Projection"
             try(
                 delete $*left_collection_controller*
                 delete $*left_point*
-                delete $*Circle*
 
                 object_to_align = Cylinder()
                 object_to_align.radius = 30
@@ -745,6 +744,12 @@ rollout DynamicProjection "Dynamic Projection"
         )
     )
     -- end export button event
+
+    on DynamicProjection open do(
+        print "rollout opened"
+        delete $*left_*
+        delete $*right_*
+    )
     -- end event listeners
 )
 
