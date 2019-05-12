@@ -707,7 +707,7 @@ rollout DynamicProjection "Dynamic Projection"
         -- print "right"
         -- print rightPositionProjected
 
-        -- open file
+        -- get output file path
         folder = getFilenamePath edit_FilePath.text
         local outputFilePath
         if(isValidNode surface_obj) then(
@@ -716,10 +716,14 @@ rollout DynamicProjection "Dynamic Projection"
         else(
             outputFilePath = (folder+"output.csv")
         )
+        -- end get output file path
         try(
+            -- open file to write data
             out_file = createFile outputFilePath
             format "RightID, Right x, Right y, Right z, LeftID, Left x, Left y, Left z\n" to:out_file
             -- end open file
+
+            -- write coord data
             cnt = 0
             if(leftPositionProjected.count > rightPositionProjected.count) then(cnt=leftPositionProjected.count) else(cnt=rightPositionProjected.count)
             for i = 1 to cnt do(
@@ -732,7 +736,7 @@ rollout DynamicProjection "Dynamic Projection"
                 )
                 else(format ", , ,\n" to:out_file)
             )
-            -- write coord data
+            -- end write coord data
             close out_file
             messageBox "Exporting Result Successed" title:"Info!"
         )
