@@ -535,6 +535,8 @@ rollout DynamicProjection "Dynamic Projection"
         )
         if msg == #mouseAbort then (
             delete $*left_collection_controller*
+            btn_Left.checked = false
+            btn_Right.checked = false
             return #end
         )
         if msg != #mousePoint then (
