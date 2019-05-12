@@ -142,9 +142,11 @@ rollout DynamicProjection "Dynamic Projection"
         local clr
         if type == "left" then(clr = color_pink) else(clr = color_cyan)
         object_to_align.material = StandardMaterial diffuse:clr opacity:30 name:("mat_controller_opacity")
+        -- set freeze
         when select object_to_align changes do(
             deselect $*_collection_controller_panel*
         )
+        -- end set freeze
 
         center = box()
         center.length = 6
@@ -163,9 +165,11 @@ rollout DynamicProjection "Dynamic Projection"
         axis.dir = object_to_align.dir
         axis.name = (type+"_collection_controller_axis")
         axis.wirecolor = clr
+        -- set freeze
         when select axis changes do(
             deselect $*_collection_controller_axis*
         )
+        -- end set freeze
         
         axisCone = cone()
         axisCone.radius1 = 1.3
@@ -177,9 +181,11 @@ rollout DynamicProjection "Dynamic Projection"
         axisCone.name = (type+"_collection_controller_axis_cone")
         axisCone.wirecolor = clr
         in coordsys #local axisCone.pos.z += 30
+        -- set freeze
         when select axisCone changes do(
             deselect $*_collection_controller_axis_cone*
         )
+        -- end set freeze
 
         diameter = Cylinder()
         diameter.radius = 0.3
@@ -190,9 +196,11 @@ rollout DynamicProjection "Dynamic Projection"
         diameter.dir = object_to_align.dir
         diameter.transform = (rotateYmatrix 90) * diameter.transform
         diameter.wirecolor = clr
+        -- set freeze
         when select diameter changes do(
             deselect $*_collection_controller_diameter*
         )
+        -- end set freeze
         
         rotate_handle = sphere()
         rotate_handle.radius = 1.6
@@ -202,9 +210,11 @@ rollout DynamicProjection "Dynamic Projection"
         in coordsys #local rotate_handle.pos.x += object_to_align.radius
         rotate_handle.pivot = object_to_align.pos
         rotate_handle.wirecolor = clr
+        -- set freeze
         when select rotate_handle changes do(
             deselect $*_collection_controller_rotate_handle*
         )
+        -- end set freeze
 
         object_to_align.parent = center
         diameter.parent = center
@@ -374,7 +384,7 @@ rollout DynamicProjection "Dynamic Projection"
     -- end update spherical projection points
 
     -- redraw points
-    fn updatePoints = (
+    fn updatePointsBySpin = (
         -- for left point collection
         if (isValidNode leftCollectionController)  do(
             newPoints = drawPoints leftCollectionController "left"
@@ -452,12 +462,17 @@ rollout DynamicProjection "Dynamic Projection"
             )
             -- end get projection
 
+            -- set freeze
             when select $*_projection* changes do(
                 deselect $*_projection*
             )
+            -- end set freeze
+
+            when select leftCollectionController changes do(
+                check_spherical.checked=leftProjectionType
+            )
             -- rotate event
             when transform leftCollectionController changes do(
-                check_spherical.checked=leftProjectionType
                 local points = #()
                 for i = 1 to originLeftPointArray.count do(
                     index = originLeftPointArray[i][1] as string
@@ -504,9 +519,18 @@ rollout DynamicProjection "Dynamic Projection"
                 )
             )
 
+            -- set freeze
+            when select $*_projection* changes do(
+                deselect $*_projection*
+            )
+            -- end set freeze
+
+            when select rightCollectionController changes do(
+                check_spherical.checked=rightProjectionType
+            )
+
             -- rotate event
             when transform rightCollectionController changes do(
-                check_spherical.checked=rightProjectionType
                 local points = #()
                 for i = 1 to originRightPointArray.count do(
                     index = originRightPointArray[i][1] as string
@@ -534,7 +558,6 @@ rollout DynamicProjection "Dynamic Projection"
 
     -- assign controller to surface
     fn assign_normal msg ir obj faceNum shift ctrl alt = (
-        print msg
         if msg == #freeMove then (
             if ir != undefined then (
                 object_to_align.pos = ir.pos 
@@ -624,7 +647,7 @@ rollout DynamicProjection "Dynamic Projection"
 
     -- spinner event
     on spin_Radius changed newValue do (
-        updatePoints()
+        updatePointsBySpin()
     )
     -- end spinner event
     -- export button event
