@@ -1,7 +1,7 @@
 rollout DynamicProjection "Dynamic Projection"
 (
     -- rollout ui
-    editText edit_FilePath   "File Name" pos:[17,  15] width:275
+    editText edit_FilePath   "File Name" pos:[15,  15] width:275
     button   btn_Browse      "Browse..." pos:[302, 13]
     spinner  spin_Radius     "Radius"    pos:[40,  45] width:70  type:#integer range:[20,600,100]
     checkbox check_spherical "Spherical Projection" pos:[117, 45]
@@ -99,7 +99,7 @@ rollout DynamicProjection "Dynamic Projection"
                 leftCollectionPointsOffset = #()
             )
             else(
-
+                rightCollectionPointsOffset = #()
             )
             -- end reset offset array
 
@@ -110,6 +110,7 @@ rollout DynamicProjection "Dynamic Projection"
                     sph = getNodeByName tmp_name
                     if sph == undefined then(
                         sph = sphere()
+                        sph.segments = 8
                         sph.name = tmp_name
                         sph.wirecolor = p_color
                         sph.radius = 1
@@ -126,7 +127,8 @@ rollout DynamicProjection "Dynamic Projection"
                         append leftCollectionPointsOffset tmp_arr
                     )
                     else(
-
+                        tmp_arr = [(centerX-arr[i][2])*t, (centerY-arr[i][3])*t]
+                        append rightCollectionPointsOffset tmp_arr
                     )
                     
                     append res sph
@@ -160,6 +162,7 @@ rollout DynamicProjection "Dynamic Projection"
         center.wirecolor = clr
 
         axis = Cylinder()
+        axis.sides = 8
         axis.radius = 0.3
         axis.height = 30
         axis.pos = object_to_align.pos
@@ -173,6 +176,7 @@ rollout DynamicProjection "Dynamic Projection"
         -- end set freeze
         
         axisCone = cone()
+        axisCone.sides = 4
         axisCone.radius1 = 1.3
         axisCone.radius2 = 0
         axisCone.height = 4
@@ -182,6 +186,7 @@ rollout DynamicProjection "Dynamic Projection"
         axisCone.name = (type+"_collection_controller_axis_cone")
         axisCone.wirecolor = clr
         in coordsys #local axisCone.pos.z += 30
+        in coordsys #local rotate axisCone (eulerangles 0 0 45)
         -- set freeze
         when select axisCone changes do(
             deselect $*_collection_controller_axis_cone*
@@ -189,6 +194,7 @@ rollout DynamicProjection "Dynamic Projection"
         -- end set freeze
 
         diameter = Cylinder()
+        diameter.sides = 8
         diameter.radius = 0.3
         diameter.height = object_to_align.radius
         diameter.name = (type+"_collection_controller_diameter")
@@ -349,6 +355,7 @@ rollout DynamicProjection "Dynamic Projection"
                 pro = getNodeByName tmp_name
                 if pro == undefined then(
                     pro = sphere()
+                    pro.segments = 8
                     pro.name = tmp_name
                     pro.radius = p.radius
                     pro.pos = p.pos
@@ -365,7 +372,7 @@ rollout DynamicProjection "Dynamic Projection"
     -- end update planar projection points
 
     -- update spherical projection points
-    fn updateSphericalProjectionPoints points clr = (
+    fn updateSphericalProjectionPoints points type clr = (
         -- print "spherical projection"
         if points != undefined do(
             res = #()
@@ -376,13 +383,15 @@ rollout DynamicProjection "Dynamic Projection"
                 pro = getNodeByName tmp_name
                 if pro == undefined then(
                     pro = sphere()
+                    pro.segments = 8
                     pro.name = tmp_name
                     pro.radius = p.radius
                     pro.pos = p.pos
                     pro.wirecolor = clr
                 )
-
-                int_point = findSphericalIntersection p leftCollectionPointsOffset[i]
+                local offset_info
+                if type=="left" then(offset_info=leftCollectionPointsOffset[i])else(offset_info=rightCollectionPointsOffset[i])
+                int_point = findSphericalIntersection p offset_info
                 if int_point != undefined then pro.pos = int_point
                 append res pro
             )
@@ -407,7 +416,7 @@ rollout DynamicProjection "Dynamic Projection"
                 )
             )
             else(
-                projections = updateSphericalProjectionPoints newPoints color_pink
+                projections = updateSphericalProjectionPoints newPoints "left" color_pink
                 for i = 1 to projections.count do(
                     projections[i].parent = leftCollectionController
                 )
@@ -428,7 +437,7 @@ rollout DynamicProjection "Dynamic Projection"
                 )
             )
             else(
-                projections = updateSphericalProjectionPoints newPoints color_cyan
+                projections = updateSphericalProjectionPoints newPoints "right" color_cyan
                 for i = 1 to projections.count do(
                     projections[i].parent = rightCollectionController
                 )
@@ -463,7 +472,7 @@ rollout DynamicProjection "Dynamic Projection"
             )
             -- get spherical projection
             else(
-                projections = updateSphericalProjectionPoints points color_pink
+                projections = updateSphericalProjectionPoints points "left" color_pink
                 for i = 1 to projections.count do(
                     projections[i].parent = leftCollectionController
                 )
@@ -495,7 +504,7 @@ rollout DynamicProjection "Dynamic Projection"
                     )
                 )
                 else(
-                    projections = updateSphericalProjectionPoints points color_pink
+                    projections = updateSphericalProjectionPoints points "left" color_pink
                     for i = 1 to projections.count do(
                         projections[i].parent = leftCollectionController
                     )
@@ -521,7 +530,7 @@ rollout DynamicProjection "Dynamic Projection"
                 )
             )
             else(
-                projections = updateSphericalProjectionPoints points color_cyan
+                projections = updateSphericalProjectionPoints points "right" color_cyan
                 for i = 1 to projections.count do(
                     projections[i].parent = rightCollectionController
                 )
@@ -553,7 +562,7 @@ rollout DynamicProjection "Dynamic Projection"
                     )
                 )
                 else(
-                    local projections = updateSphericalProjectionPoints points color_cyan
+                    local projections = updateSphericalProjectionPoints points "right" color_cyan
                     for i = 1 to projections.count do(
                         projections[i].parent = rightCollectionController
                     )
