@@ -579,6 +579,13 @@ rollout DynamicProjection "Dynamic Projection"
             if ir != undefined then (
                 object_to_align.pos = ir.pos 
                 object_to_align.dir = ir.dir
+                if keyboard.escpressed then(
+                    print "reset"
+                    delete $*left_collection_controller*
+                    delete $*right_collection_controller*
+                    btn_Left.checked = false
+                    btn_Right.checked = false
+                )
                 return #continue
             )
             else(
@@ -587,6 +594,7 @@ rollout DynamicProjection "Dynamic Projection"
         )
         if msg == #mouseAbort then (
             delete $*left_collection_controller*
+            delete $*right_collection_controller*
             btn_Left.checked = false
             btn_Right.checked = false
             return #end
