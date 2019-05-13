@@ -7,6 +7,8 @@ rollout DynamicProjection "Dynamic Projection"
     checkbox check_spherical "Spherical Projection" pos:[117, 45]
     checkButton   btn_Left   "Left"      pos:[235, 42] width:60
     checkButton   btn_Right  "Right"     pos:[305, 42] width:60
+    checkbox check_rt_projection "Enable Real-Time Projection" pos:[117, 72]
+    button   btn_update_projection "Update Projection" pos:[280,70] width:206
     button   btn_Export      "Export"    pos:[375, 13] width:110 height:50
     -- end rollout ui
 
@@ -490,23 +492,25 @@ rollout DynamicProjection "Dynamic Projection"
             )
             -- rotate event
             when transform leftCollectionController changes do(
-                local points = #()
-                for i = 1 to originLeftPointArray.count do(
-                    index = originLeftPointArray[i][1] as string
-                    tmp_name = "left_point_"+index
-                    obj = getNodeByName tmp_name
-                    append points obj
-                )
-                if(leftProjectionType == false) then(
-                    local projections = updatePlanarProjectionPoints points color_pink
-                    for i = 1 to projections.count do(
-                        projections[i].parent = leftCollectionController
+                if(check_rt_projection.checked == true) do(
+                    local points = #()
+                    for i = 1 to originLeftPointArray.count do(
+                        index = originLeftPointArray[i][1] as string
+                        tmp_name = "left_point_"+index
+                        obj = getNodeByName tmp_name
+                        append points obj
                     )
-                )
-                else(
-                    projections = updateSphericalProjectionPoints points "left" color_pink
-                    for i = 1 to projections.count do(
-                        projections[i].parent = leftCollectionController
+                    if(leftProjectionType == false) then(
+                        local projections = updatePlanarProjectionPoints points color_pink
+                        for i = 1 to projections.count do(
+                            projections[i].parent = leftCollectionController
+                        )
+                    )
+                    else(
+                        projections = updateSphericalProjectionPoints points "left" color_pink
+                        for i = 1 to projections.count do(
+                            projections[i].parent = leftCollectionController
+                        )
                     )
                 )
             )
@@ -548,23 +552,25 @@ rollout DynamicProjection "Dynamic Projection"
 
             -- rotate event
             when transform rightCollectionController changes do(
-                local points = #()
-                for i = 1 to originRightPointArray.count do(
-                    index = originRightPointArray[i][1] as string
-                    tmp_name = "right_point_"+index
-                    obj = getNodeByName tmp_name
-                    append points obj
-                )
-                if(rightProjectionType == false) then(
-                    local projections = updatePlanarProjectionPoints points color_cyan
-                    for i = 1 to projections.count do(
-                        projections[i].parent = rightCollectionController
+                if(check_rt_projection.checked == true) do(
+                    local points = #()
+                    for i = 1 to originRightPointArray.count do(
+                        index = originRightPointArray[i][1] as string
+                        tmp_name = "right_point_"+index
+                        obj = getNodeByName tmp_name
+                        append points obj
                     )
-                )
-                else(
-                    local projections = updateSphericalProjectionPoints points "right" color_cyan
-                    for i = 1 to projections.count do(
-                        projections[i].parent = rightCollectionController
+                    if(rightProjectionType == false) then(
+                        local projections = updatePlanarProjectionPoints points color_cyan
+                        for i = 1 to projections.count do(
+                            projections[i].parent = rightCollectionController
+                        )
+                    )
+                    else(
+                        local projections = updateSphericalProjectionPoints points "right" color_cyan
+                        for i = 1 to projections.count do(
+                            projections[i].parent = rightCollectionController
+                        )
                     )
                 )
             )
@@ -669,7 +675,9 @@ rollout DynamicProjection "Dynamic Projection"
 
     -- spinner event
     on spin_Radius changed newValue do (
-        updatePointsBySpin()
+        if check_rt_projection.checked == true do(
+            updatePointsBySpin()
+        )
     )
     -- end spinner event
     -- export button event
@@ -752,7 +760,19 @@ rollout DynamicProjection "Dynamic Projection"
         )
     )
     -- end export button event
+    
+    on check_rt_projection changed state do(
+        if state == true then(
+            btn_update_projection.enabled = false
+        )
+        else(
+            btn_update_projection.enabled = true
+        )
+    )
 
+    on btn_update_projection pressed do(
+        updatePointsBySpin()
+    )
     on DynamicProjection open do(
         print "rollout opened"
         delete $*left_*
@@ -761,4 +781,4 @@ rollout DynamicProjection "Dynamic Projection"
     -- end event listeners
 )
 
-createdialog DynamicProjection width:500 height:75
+createdialog DynamicProjection width:500 height:105
