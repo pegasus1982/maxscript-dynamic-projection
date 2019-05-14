@@ -761,6 +761,7 @@ rollout DynamicProjection "Dynamic Projection"
     )
     -- end export button event
     
+    -- enable/disable real time projection
     on check_rt_projection changed state do(
         if state == true then(
             btn_update_projection.enabled = false
@@ -769,15 +770,21 @@ rollout DynamicProjection "Dynamic Projection"
             btn_update_projection.enabled = true
         )
     )
+    -- end enable/disable real time projection
 
+    -- update projection manually
     on btn_update_projection pressed do(
         updatePointsBySpin()
     )
+    -- end update projection manually
+
+    -- open rollout event
     on DynamicProjection open do(
         print "rollout opened"
         delete $*left_*
         delete $*right_*
     )
+    -- end open rollout event
     -- end event listeners
 )
 
